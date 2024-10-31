@@ -16,6 +16,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from .svdlora import SVDLoraConfig, SVDLoraModel
 from .dora import DoraConfig, DoraModel
 from .lora import LoraConfig, LoraModel
 from .bottleneck import BottleneckConfig, BottleneckModel
