@@ -1,4 +1,13 @@
+# Copyright (c) 2024, NVIDIA CORPORATION.  All rights reserved.
+#
+# NVIDIA CORPORATION and its licensors retain all intellectual property
+# and proprietary rights in and to this software, related documentation
+# and any modifications thereto.  Any use, reproduction, disclosure or
+# distribution of this software and related documentation without an express
+# license agreement from NVIDIA CORPORATION is strictly prohibited.
+
 import os
+# os.environ["CUDA_VISIBLE_DEVICES"]="0,1"
 import sys
 from typing import List
 
@@ -16,6 +25,8 @@ import bitsandbytes as bnb
 sys.path.append(os.path.join(os.getcwd(), "peft/src/"))
 from peft import (  # noqa: E402
     LoraConfig,
+    DoraConfig,
+    SVDLoraConfig,
     BottleneckConfig,
     PrefixTuningConfig,
     get_peft_model,
@@ -38,6 +49,7 @@ def train(
         micro_batch_size: int = 4,
         num_epochs: int = 3,
         learning_rate: float = 3e-4,
+        weight_decay: float = 0.0,
         cutoff_len: int = 256,
         val_set_size: int = 2000,
         use_gradient_checkpointing: bool = False,
@@ -55,6 +67,9 @@ def train(
         use_parallel_adapter: bool = False,
         use_adapterp: bool = False,
         target_modules: List[str] = None,
+        # Dora hyperparams
+        dora_simple: bool = True,
+        Wdecompose_target_modules: List[str] = None,
         scaling: Union[float, str] = 1.0,
         # prefix tuning hyperparams
         num_virtual_tokens: int = 30,
@@ -84,6 +99,8 @@ def train(
         f"lora_alpha: {lora_alpha}\n"
         f"lora_dropout: {lora_dropout}\n"
         f"lora_target_modules: {lora_target_modules}\n"
+        f"Wdecompose_target_modules: {Wdecompose_target_modules}\n"
+        f"dora_simple: {dora_simple}"
         f"bottleneck_size: {bottleneck_size}\n"
         f"non_linearity: {non_linearity}\n"
         f"adapter_dropout: {adapter_dropout}\n"
@@ -137,13 +154,20 @@ def train(
             base_model,
             load_in_8bit=False,
             torch_dtype=torch.float16,
-            device_map={"": int(os.environ.get("LOCAL_RANK") or 0)},
+            # device_map={"": int(os.environ.get("LOCAL_RANK") or 0)},
+            device_map=device_map,
             trust_remote_code=True,
         )
 
+    
     if model.config.model_type == "llama":
         # Due to the name of transformers' LlamaTokenizer, we have to do this
-        tokenizer = LlamaTokenizer.from_pretrained(base_model)
+        # need to handle llama 3 separately
+        if "Llama-3" in base_model:
+            print("load llama-3 tokenizer")
+            tokenizer = AutoTokenizer.from_pretrained(base_model)
+        else:
+            tokenizer = LlamaTokenizer.from_pretrained(base_model)
     else:
         tokenizer = AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
 
@@ -192,10 +216,33 @@ def train(
                                                                     user_prompt_len:
                                                                     ]  # could be sped up, probably
         return tokenized_full_prompt
-
+    
     model = prepare_model_for_int8_training(model, use_gradient_checkpointing=use_gradient_checkpointing)
+    print(model)
     if adapter_name == "lora":
         config = LoraConfig(
+            r=lora_r,
+            lora_alpha=lora_alpha,
+            target_modules=target_modules,
+            lora_dropout=lora_dropout,
+            bias="none",
+            task_type="CAUSAL_LM",
+        )
+    elif adapter_name == "dora":
+        print("DoRA init")
+        config = DoraConfig(
+            r=lora_r,
+            lora_alpha=lora_alpha,
+            target_modules=target_modules,
+            lora_dropout=lora_dropout,
+            bias="none",
+            task_type="CAUSAL_LM",
+            dora_simple=dora_simple,
+            Wdecompose_target_modules=Wdecompose_target_modules
+        )
+    elif adapter_name == "svdlora":
+        print("SVD LoRA init")
+        config = SVDLoraConfig(
             r=lora_r,
             lora_alpha=lora_alpha,
             target_modules=target_modules,
@@ -269,7 +316,7 @@ def train(
         # keeps Trainer from trying its own DataParallelism when more than 1 gpu is available
         model.is_parallelizable = True
         model.model_parallel = True
-
+    
     trainer = transformers.Trainer(
         model=model,
         train_dataset=train_data,
@@ -280,6 +327,7 @@ def train(
             warmup_steps=100,
             num_train_epochs=num_epochs,
             learning_rate=learning_rate,
+            weight_decay=weight_decay,
             fp16=True,
             logging_steps=10,
             optim="adamw_torch",
@@ -318,6 +366,8 @@ def train(
     print(
         "\n If there's a warning about missing keys above, please disregard :)"
     )
+
+    
 
 
 def generate_prompt(data_point):
