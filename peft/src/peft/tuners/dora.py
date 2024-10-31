@@ -420,6 +420,9 @@ class Linear(nn.Linear, LoraLayer):
             # self.weight: [out_features, in_features]
             # torch.linalg.norm(self.weight,dim=1): [1, out_features]
             # norm_scale: [1, out_features]
+            # ---------------------!!!!!!---------------------
+            # !!only finetune magnitude matrix!!
+            # ---------------------!!!!!!---------------------
             norm_scale = self.weight_m_wdecomp.weight.view(-1) / (torch.linalg.norm(self.weight,dim=1))
 
             org_result = (F.linear(x, transpose(self.weight, self.fan_in_fan_out)))
@@ -430,7 +433,9 @@ class Linear(nn.Linear, LoraLayer):
                     result += self.bias.view(1, -1).expand_as(result)
 
         elif self.r > 0 and not self.merged:
-            
+            # ---------------------!!!!!!---------------------
+            # !!finetune magnitude and direction matrix!!
+            # ---------------------!!!!!!---------------------
             new_weight_v = self.weight + (self.lora_B.weight @ self.lora_A.weight) * self.scaling
 
             if self.dora_simple:
@@ -450,7 +455,10 @@ class Linear(nn.Linear, LoraLayer):
             result += ( norm_scale * (self.lora_B(self.lora_A(dropout_x.to(self.lora_A.weight.dtype))))) * self.scaling
             
         else:
-             result = F.linear(x, transpose(self.weight, self.fan_in_fan_out), bias=self.bias)
+            # ---------------------!!!!!!---------------------
+            # self.weight has merged finetuned matrix weight
+            # ---------------------!!!!!!---------------------
+            result = F.linear(x, transpose(self.weight, self.fan_in_fan_out), bias=self.bias)
 
         if result.dtype != previous_dtype:
             result = result.to(previous_dtype)
