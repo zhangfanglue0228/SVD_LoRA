@@ -1,2 +1,4 @@
+*.ipynb
 /dataset
 /ft-training_set
+/.vscode
