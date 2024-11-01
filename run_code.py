@@ -7,7 +7,7 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
 import os
-os.environ["CUDA_VISIBLE_DEVICES"]="0"
+os.environ["CUDA_VISIBLE_DEVICES"]="1"
 import sys
 from typing import List
 
@@ -104,9 +104,9 @@ def generate_and_tokenize_prompt(data_point):
 
 # model/data params
 base_model: str = "../../models/meta-llama/Meta-Llama-3-8B"  # the only required argument
-data_path: str = "./ft-training_set/commonsense_170k.json"
+data_path: str = "./ft-training_set/commonsense_15k.json"
 output_dir: str = "./outputs/llama3-svdlora"
-adapter_name: str = "dora"
+adapter_name: str = "svdlora"
 load_8bit : bool = False
 # training hyperparams
 batch_size: int = 128
@@ -130,7 +130,7 @@ non_linearity: str = "tanh"
 adapter_dropout: float = 0.0
 use_parallel_adapter: bool = False
 use_adapterp: bool = False
-target_modules: List[str] = ["q_proj", "k_proj", "v_proj", "up_proj", "down_proj"]
+target_modules: List[str] = ["q_proj"]
 # Dora hyperparams
 dora_simple: bool = True
 Wdecompose_target_modules: List[str] = None

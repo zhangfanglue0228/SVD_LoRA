@@ -254,16 +254,10 @@ class Linear(nn.Linear, LoraLayer):
             self.lora_B = nn.Linear(r, out_features, bias=False)
             self.scaling = self.lora_alpha / self.r
             # Store the svd matrixes
-            device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-            with torch.no_grad():
-                copy_weight = self.weight.clone()
-                self.svd_u, self.svd_s, self.svd_v = torch.linalg.svd(copy_weight.data.to(device), full_matrices=False)
-                self.svd_u = self.svd_u.cpu()
-                self.svd_s = self.svd_s.cpu()
-                self.svd_v = self.svd_v.cpu()
-                self.svd_s = torch.diag(self.svd_s)
-            del copy_weight
-            torch.cuda.empty_cache()
+            r = min(in_features, out_features)
+            self.svd_u = nn.Linear(r, out_features, bias=False)
+            self.svd_s = nn.Linear(r, r, bias=False)           
+            self.svd_v = nn.Linear(in_features, r, bias=False)            
             # Freezing the pre-trained weight matrix
             self.weight.requires_grad = False
         self.reset_parameters()
@@ -276,6 +270,20 @@ class Linear(nn.Linear, LoraLayer):
             # initialize A the same way as the default for nn.Linear and B to zero
             nn.init.kaiming_uniform_(self.lora_A.weight, a=math.sqrt(5))
             nn.init.zeros_(self.lora_B.weight)
+        if hasattr(self, "svd_u"):
+            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            with torch.no_grad():
+                copy_weight = self.weight.clone()
+                u, s, v = torch.linalg.svd(copy_weight.data.to(device), full_matrices=False)
+                s = torch.diag(s)
+            self.svd_u.weight.data.copy_(u.detach())
+            self.svd_s.weight.data.copy_(s.detach())
+            self.svd_v.weight.data.copy_(v.detach())
+            self.svd_u.weight.requires_grad = False
+            self.svd_s.weight.requires_grad = False
+            self.svd_v.weight.requires_grad = False
+            del copy_weight, u, s, v
+            torch.cuda.empty_cache()
 
     def train(self, mode: bool=True):
         nn.Linear.train(self, mode)
@@ -310,7 +318,7 @@ class Linear(nn.Linear, LoraLayer):
         
         elif self.r > 0 and not self.merged:
             result = F.linear(x, transpose(self.weight, self.fan_in_fan_out), bias=self.bias)
-            temp_result = F.linear(x, transpose(self.svd_s @ self.svd_v, fan_in_fan_out=self.fan_in_fan_out))
+            temp_result = F.linear(x, transpose((self.svd_s.weight @ self.svd_v.weight).to(x.dtype), fan_in_fan_out=self.fan_in_fan_out))
             result += ((self.lora_dropout(temp_result.to(self.lora_A.weight.dtype)) @ self.lora_A.weight.T) @ self.lora_B.weight.T) * self.scaling
 
         else:
