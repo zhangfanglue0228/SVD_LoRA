@@ -106,7 +106,7 @@ def generate_and_tokenize_prompt(data_point):
 base_model: str = "../../models/meta-llama/Meta-Llama-3-8B"  # the only required argument
 data_path: str = "./ft-training_set/commonsense_170k.json"
 output_dir: str = "./outputs/llama3-svdlora"
-adapter_name: str = "svdlora"
+adapter_name: str = "dora"
 load_8bit : bool = False
 # training hyperparams
 batch_size: int = 128
