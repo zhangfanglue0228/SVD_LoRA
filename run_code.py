@@ -7,7 +7,7 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
 import os
-os.environ["CUDA_VISIBLE_DEVICES"]="1"
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
 import sys
 from typing import List
 
@@ -36,6 +36,72 @@ from peft import (  # noqa: E402
 )
 from transformers import AutoModelForCausalLM, AutoTokenizer, LlamaTokenizer, AutoModel  # noqa: F402
 
+
+def generate_prompt(data_point):
+    # sorry about the formatting disaster gotta move fast
+    if data_point["input"]:
+        return f"""Below is an instruction that describes a task, paired with an input that provides further context. Write a response that appropriately completes the request. 
+
+                ### Instruction:
+                {data_point["instruction"]}
+                
+                ### Input:
+                {data_point["input"]}
+                
+                ### Response:
+                {data_point["output"]}""" # noqa: E501
+    else:
+        return f"""Below is an instruction that describes a task. Write a response that appropriately completes the request.  
+
+                ### Instruction:
+                {data_point["instruction"]}
+                
+                ### Response:
+                {data_point["output"]}""" # noqa: E501
+
+
+def tokenize(prompt, add_eos_token=True):
+    # there's probably a way to do this with the tokenizer settings
+    # but again, gotta move fast
+    result = tokenizer(
+        prompt,
+        truncation=True,
+        max_length=cutoff_len,
+        padding=False,
+        return_tensors=None,
+    )
+    if (
+            result["input_ids"][-1] != tokenizer.eos_token_id
+            and len(result["input_ids"]) < cutoff_len
+            and add_eos_token
+    ):
+        result["input_ids"].append(tokenizer.eos_token_id)
+        if "chatglm" not in base_model:
+            result["attention_mask"].append(1)
+
+    result["labels"] = result["input_ids"].copy()
+
+    if "chatglm" in base_model:
+        return {"input_ids": result["input_ids"], "labels": result["labels"]}
+    else:
+        return result
+
+def generate_and_tokenize_prompt(data_point):
+    full_prompt = generate_prompt(data_point)
+    tokenized_full_prompt = tokenize(full_prompt)
+    if not train_on_inputs:
+        user_prompt = generate_prompt({**data_point, "output": ""})
+        tokenized_user_prompt = tokenize(user_prompt, add_eos_token=False)
+        user_prompt_len = len(tokenized_user_prompt["input_ids"])
+
+        tokenized_full_prompt["labels"] = [
+                                                -100
+                                            ] * user_prompt_len + tokenized_full_prompt["labels"][
+                                                                user_prompt_len:
+                                                                ]  # could be sped up, probably
+    return tokenized_full_prompt
+
+
 # model/data params
 base_model: str = "../../models/meta-llama/Meta-Llama-3-8B"  # the only required argument
 data_path: str = "./ft-training_set/commonsense_170k.json"
@@ -54,8 +120,8 @@ use_gradient_checkpointing: bool = False
 eval_step: int = 200
 save_step: int = 200
 # lora hyperparams
-lora_r: int = 8
-lora_alpha: int = 16
+lora_r: int = 32
+lora_alpha: int = 64
 lora_dropout: float = 0.05
 lora_target_modules: List[str] = None
 # bottleneck adapter hyperparams
@@ -175,46 +241,6 @@ tokenizer.pad_token_id = (
 )
 tokenizer.padding_side = "left"  # Allow batched inference
 
-def tokenize(prompt, add_eos_token=True):
-    # there's probably a way to do this with the tokenizer settings
-    # but again, gotta move fast
-    result = tokenizer(
-        prompt,
-        truncation=True,
-        max_length=cutoff_len,
-        padding=False,
-        return_tensors=None,
-    )
-    if (
-            result["input_ids"][-1] != tokenizer.eos_token_id
-            and len(result["input_ids"]) < cutoff_len
-            and add_eos_token
-    ):
-        result["input_ids"].append(tokenizer.eos_token_id)
-        if "chatglm" not in base_model:
-            result["attention_mask"].append(1)
-
-    result["labels"] = result["input_ids"].copy()
-
-    if "chatglm" in base_model:
-        return {"input_ids": result["input_ids"], "labels": result["labels"]}
-    else:
-        return result
-
-def generate_and_tokenize_prompt(data_point):
-    full_prompt = generate_prompt(data_point)
-    tokenized_full_prompt = tokenize(full_prompt)
-    if not train_on_inputs:
-        user_prompt = generate_prompt({**data_point, "output": ""})
-        tokenized_user_prompt = tokenize(user_prompt, add_eos_token=False)
-        user_prompt_len = len(tokenized_user_prompt["input_ids"])
-
-        tokenized_full_prompt["labels"] = [
-                                                -100
-                                            ] * user_prompt_len + tokenized_full_prompt["labels"][
-                                                                user_prompt_len:
-                                                                ]  # could be sped up, probably
-    return tokenized_full_prompt
 
 model = prepare_model_for_int8_training(model, use_gradient_checkpointing=use_gradient_checkpointing)
 print(model)
@@ -365,26 +391,3 @@ model.save_pretrained(output_dir)
 print(
     "\n If there's a warning about missing keys above, please disregard :)"
 )
-
-
-def generate_prompt(data_point):
-    # sorry about the formatting disaster gotta move fast
-    if data_point["input"]:
-        return f"""Below is an instruction that describes a task, paired with an input that provides further context. Write a response that appropriately completes the request. 
-
-                ### Instruction:
-                {data_point["instruction"]}
-                
-                ### Input:
-                {data_point["input"]}
-                
-                ### Response:
-                {data_point["output"]}""" # noqa: E501
-    else:
-        return f"""Below is an instruction that describes a task. Write a response that appropriately completes the request.  
-
-                ### Instruction:
-                {data_point["instruction"]}
-                
-                ### Response:
-                {data_point["output"]}""" # noqa: E501

@@ -59,12 +59,15 @@ class SVDLoraConfig(PeftConfig):
         },
     )
 
+    def __post_init__(self):
+        self.peft_type = PeftType.SVDLORA
+
 
 class SVDLoraModel(torch.nn.Module):
     """
     lue
     """
-    def init(self, config, model):
+    def __init__(self, config, model):
         super().__init__()
         self.peft_config = config
         self.model = model
@@ -88,7 +91,7 @@ class SVDLoraModel(torch.nn.Module):
             "fan_in_fan_out": self.peft_config.fan_in_fan_out,
             "merge_weights": (self.peft_config.merge_weights or self.peft_config.inference_mode)
             and not is_hf_device_map_available,
-            "dora_simple": self.peft_config.dora_simple
+            # "dora_simple": self.peft_config.dora_simple
         }
         key_list = [key for key, _ in self.model.named_modules()]
         for key in key_list:
@@ -251,8 +254,16 @@ class Linear(nn.Linear, LoraLayer):
             self.lora_B = nn.Linear(r, out_features, bias=False)
             self.scaling = self.lora_alpha / self.r
             # Store the svd matrixes
-            self.svd_u, self.svd_s, self.svd_v = torch.linalg.svd(self.weight.data, full_matrices=False)
-            self.svd_s = torch.diag(self.svd_s)
+            device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+            with torch.no_grad():
+                copy_weight = self.weight.clone()
+                self.svd_u, self.svd_s, self.svd_v = torch.linalg.svd(copy_weight.data.to(device), full_matrices=False)
+                self.svd_u = self.svd_u.cpu()
+                self.svd_s = self.svd_s.cpu()
+                self.svd_v = self.svd_v.cpu()
+                self.svd_s = torch.diag(self.svd_s)
+            del copy_weight
+            torch.cuda.empty_cache()
             # Freezing the pre-trained weight matrix
             self.weight.requires_grad = False
         self.reset_parameters()
