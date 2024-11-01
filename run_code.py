@@ -7,7 +7,7 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
 import os
-os.environ["CUDA_VISIBLE_DEVICES"]="1"
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
 import sys
 from typing import List
 
@@ -109,8 +109,8 @@ output_dir: str = "./outputs/llama3-svdlora"
 adapter_name: str = "svdlora"
 load_8bit : bool = False
 # training hyperparams
-batch_size: int = 128
-micro_batch_size: int = 4
+batch_size: int = 16
+micro_batch_size: int = 1
 num_epochs: int = 3
 learning_rate: float = 1e-4
 weight_decay: float = 0.0
