@@ -7,3 +7,4 @@ test.py
 /peft/src/peft/tuners/__pycache__
 /peft/src/peft/utils/__pycache__
 /outputs
+/experiment
