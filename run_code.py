@@ -110,13 +110,13 @@ adapter_name: str = "svdlora"
 load_8bit : bool = False
 # training hyperparams
 batch_size: int = 16
-micro_batch_size: int = 1
+micro_batch_size: int = 2
 num_epochs: int = 3
 learning_rate: float = 1e-4
 weight_decay: float = 0.0
 cutoff_len: int = 256
-val_set_size: int = 2000
-use_gradient_checkpointing: bool = False
+val_set_size: int = 120
+use_gradient_checkpointing: bool = True
 eval_step: int = 200
 save_step: int = 200
 # lora hyperparams
@@ -130,7 +130,7 @@ non_linearity: str = "tanh"
 adapter_dropout: float = 0.0
 use_parallel_adapter: bool = False
 use_adapterp: bool = False
-target_modules: List[str] = ["q_proj"]
+target_modules: List[str] = ["q_proj","k_proj","v_proj","up_proj","down_proj"]
 # Dora hyperparams
 dora_simple: bool = True
 Wdecompose_target_modules: List[str] = None
