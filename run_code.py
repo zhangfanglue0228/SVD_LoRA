@@ -117,8 +117,8 @@ weight_decay: float = 0.0
 cutoff_len: int = 256
 val_set_size: int = 120
 use_gradient_checkpointing: bool = True
-eval_step: int = 50
-save_step: int = 50
+eval_step: int = 10
+save_step: int = 10
 # lora hyperparams
 lora_r: int = 32
 lora_alpha: int = 64

@@ -72,7 +72,7 @@ class SVDLoraModel(torch.nn.Module):
         self.peft_config = config
         self.model = model
         self._find_and_replace()
-        # mark_only_lora_as_trainable(self.model, self.peft_config.bias)
+        mark_only_lora_as_trainable(self.model, self.peft_config.bias)
         self.forward = self.model.forward
 
     def _find_and_replace(self):
