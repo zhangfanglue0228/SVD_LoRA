@@ -29,7 +29,7 @@ from .peft_model import (
     PeftModelForSequenceClassification,
     PeftModelForTokenClassification,
 )
-from .tuners import LoraConfig, PrefixTuningConfig, PromptEncoderConfig, PromptTuningConfig, BottleneckConfig, DoraConfig
+from .tuners import LoraConfig, PrefixTuningConfig, PromptEncoderConfig, PromptTuningConfig, BottleneckConfig, DoraConfig, SVDLoraConfig
 from .utils import PromptLearningConfig
 
 
@@ -46,7 +46,8 @@ PEFT_TYPE_TO_CONFIG_MAPPING = {
     "P_TUNING": PromptEncoderConfig,
     "LORA": LoraConfig,
     "BOTTLENECK": BottleneckConfig,
-    "DORA": DoraConfig
+    "DORA": DoraConfig,
+    "SVDLORA": SVDLoraConfig
 }
 
 TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING = {

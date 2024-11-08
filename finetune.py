@@ -58,7 +58,7 @@ def train(
         # lora hyperparams
         lora_r: int = 8,
         lora_alpha: int = 16,
-        lora_dropout: float = 0.05,
+        lora_dropout: float = 0.1,
         lora_target_modules: List[str] = None,
         # bottleneck adapter hyperparams
         bottleneck_size: int = 256,
