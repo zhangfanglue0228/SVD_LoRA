@@ -7,7 +7,7 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
 import os
-os.environ["CUDA_VISIBLE_DEVICES"]="5,6"
+# os.environ["CUDA_VISIBLE_DEVICES"]="5,6"
 import sys
 from typing import List
 
@@ -27,6 +27,9 @@ from peft import (  # noqa: E402
     LoraConfig,
     DoraConfig,
     SVDLoraConfig,
+    SVDinitLora_v1_Config,
+    # SVDinitLora_v2_Config,
+    # SVDinitLora_v3_Config,
     BottleneckConfig,
     PrefixTuningConfig,
     get_peft_model,
@@ -106,7 +109,7 @@ def generate_and_tokenize_prompt(data_point):
 base_model: str = "../../models/meta-llama/Meta-Llama-3-8B"  # the only required argument
 data_path: str = "./ft-training_set/commonsense_15k.json"
 output_dir: str = "./outputs/llama3-svdlora"
-adapter_name: str = "svdlora"
+adapter_name: str = "svdinitlora_v1"
 load_8bit : bool = False
 # training hyperparams
 batch_size: int = 8
@@ -275,6 +278,36 @@ elif adapter_name == "svdlora":
         bias="none",
         task_type="CAUSAL_LM",
     )
+elif adapter_name == "svdinitlora_v1":
+    print("SVD LoRA init")
+    config = SVDinitLora_v1_Config(
+        r=lora_r,
+        lora_alpha=lora_alpha,
+        target_modules=target_modules,
+        lora_dropout=lora_dropout,
+        bias="none",
+        task_type="CAUSAL_LM",
+    )
+# elif adapter_name == "svdinitlora_v2":
+#     print("SVD LoRA init")
+#     config = SVDinitLora_v2_Config(
+#         r=lora_r,
+#         lora_alpha=lora_alpha,
+#         target_modules=target_modules,
+#         lora_dropout=lora_dropout,
+#         bias="none",
+#         task_type="CAUSAL_LM",
+#     )
+# elif adapter_name == "svdinitlora_v3":
+#     print("SVD LoRA init")
+#     config = SVDinitLora_v3_Config(
+#         r=lora_r,
+#         lora_alpha=lora_alpha,
+#         target_modules=target_modules,
+#         lora_dropout=lora_dropout,
+#         bias="none",
+#         task_type="CAUSAL_LM",
+#     )
 elif adapter_name == "bottleneck":
     config = BottleneckConfig(
         bottleneck_size=bottleneck_size,
