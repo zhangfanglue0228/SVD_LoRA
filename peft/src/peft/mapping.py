@@ -29,7 +29,18 @@ from .peft_model import (
     PeftModelForSequenceClassification,
     PeftModelForTokenClassification,
 )
-from .tuners import LoraConfig, PrefixTuningConfig, PromptEncoderConfig, PromptTuningConfig, BottleneckConfig, DoraConfig, SVDLoraConfig
+from .tuners import (
+    LoraConfig, 
+    PrefixTuningConfig, 
+    PromptEncoderConfig, 
+    PromptTuningConfig, 
+    BottleneckConfig, 
+    DoraConfig, 
+    SVDLoraConfig,
+    SVDinitLora_v1_Config,
+    # SVDinitLora_v2_Config,
+    # SVDinitLora_v3_Config,
+)
 from .utils import PromptLearningConfig
 
 
@@ -47,7 +58,10 @@ PEFT_TYPE_TO_CONFIG_MAPPING = {
     "LORA": LoraConfig,
     "BOTTLENECK": BottleneckConfig,
     "DORA": DoraConfig,
-    "SVDLORA": SVDLoraConfig
+    "SVDLORA": SVDLoraConfig,
+    "SVDinitLoRA_v1": SVDinitLora_v1_Config,
+    # "SVDinitLoRA_v2": SVDinitLora_v2_Config,
+    # "SVDinitLoRA_v3": SVDinitLora_v3_Config,
 }
 
 TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING = {
@@ -228,6 +242,9 @@ def get_peft_model(model, peft_config):
             peft_config = _prepare_dora_config(peft_config, model_config)
             return PeftModel(model, peft_config)
         elif peft_config.peftype == "SVDLORA":
+            peft_config = _prepare_svdlora_config(peft_config, model_config)
+            return PeftModel(model, peft_config)
+        elif "SVDinitLORA" in peft_config.peftype:
             peft_config = _prepare_svdlora_config(peft_config, model_config)
             return PeftModel(model, peft_config)
         elif peft_config.peft_type == "BOTTLENECK":
