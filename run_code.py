@@ -133,7 +133,7 @@ non_linearity: str = "tanh"
 adapter_dropout: float = 0.0
 use_parallel_adapter: bool = False
 use_adapterp: bool = False
-target_modules: List[str] = ["q_proj","k_proj","v_proj"]
+target_modules: List[str] = ["q_proj", "k_proj", "v_proj", "up_proj", "down_proj"]
 # Dora hyperparams
 dora_simple: bool = True
 Wdecompose_target_modules: List[str] = None

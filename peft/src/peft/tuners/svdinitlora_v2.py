@@ -23,7 +23,7 @@ if is_bnb_available():
 
 
 @dataclass
-class SVDinitLoraConfig(PeftConfig):
+class SVDinitLora_v2_Config(PeftConfig):
     """
     lue
     """
@@ -60,7 +60,7 @@ class SVDinitLoraConfig(PeftConfig):
     )
 
     def __post_init__(self):
-        self.peft_type = PeftType.SVDLORA
+        self.peft_type = PeftType.SVDinitLORA_v2
 
 
 class SVDinitLoraModel(torch.nn.Module):
