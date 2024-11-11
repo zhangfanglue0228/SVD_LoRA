@@ -84,7 +84,12 @@ def main(
     batches = create_batch(dataset, args.batch_size)
     tokenizer, model = load_model(args)
 
-    if args.adapter == "LoRA" or args.adapter == "DoRA" or args.adapter == "SVDLoRA":
+    if (args.adapter == "LoRA" or 
+        args.adapter == "DoRA" or 
+        args.adapter == "SVDLoRA" or 
+        args.adapter == "SVDinitLoRA_v1" or 
+        args.adapter == "SVDinitLoRA_v2" or 
+        args.adapter == "SVDinitLoRA_v3"):
         print("Merge LoRA/DoRA weights into the original weights")
         key_list = [(key,module) for key, module in model.model.named_modules()]
         for key,module in key_list:
@@ -214,7 +219,7 @@ def parse_args():
     parser.add_argument('--dataset', choices=["boolq", "piqa", "social_i_qa", "hellaswag", "winogrande", "ARC-Challenge", "ARC-Easy", "openbookqa"],
                         required=True)
     parser.add_argument('--model', choices=['LLaMA-7B', "LLaMA-13B",'LLaMA2-7B','LLaMA3-8B'], required=True)
-    parser.add_argument('--adapter', choices=['LoRA', 'AdapterP', 'AdapterH', 'Parallel', 'DoRA', 'SVDLoRA'],
+    parser.add_argument('--adapter', choices=['LoRA', 'AdapterP', 'AdapterH', 'Parallel', 'DoRA', 'SVDLoRA', 'SVDinitLoRA_v1', 'SVDinitLoRA_v2', 'SVDinitLoRA_v3'],
                         required=True)
     parser.add_argument('--base_model', required=True)
     parser.add_argument('--lora_weights', required=True)

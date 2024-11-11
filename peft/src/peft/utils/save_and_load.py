@@ -130,7 +130,14 @@ def set_peft_model_state_dict(model, peft_model_state_dict):
     """
 
     model.load_state_dict(peft_model_state_dict, strict=False)
-    if model.peft_config.peft_type != PeftType.LORA and model.peft_config.peft_type != PeftType.BOTTLENECK and model.peft_config.peft_type != PeftType.DORA and model.peft_config.peft_type != PeftType.SVDLORA:
+    if (model.peft_config.peft_type != PeftType.LORA and 
+        model.peft_config.peft_type != PeftType.BOTTLENECK and 
+        model.peft_config.peft_type != PeftType.DORA and 
+        model.peft_config.peft_type != PeftType.SVDLORA and
+        model.peft_config.peft_type != PeftType.SVDinitLORA_v1 and
+        model.peft_config.peft_type != PeftType.SVDinitLORA_v2 and
+        model.peft_config.peft_type != PeftType.SVDinitLORA_v3
+        ):
         model.prompt_encoder.embedding.load_state_dict(
             {"weight": peft_model_state_dict["prompt_embeddings"]}, strict=True
         )

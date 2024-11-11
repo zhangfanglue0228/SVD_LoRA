@@ -59,7 +59,7 @@ PEFT_TYPE_TO_CONFIG_MAPPING = {
     "BOTTLENECK": BottleneckConfig,
     "DORA": DoraConfig,
     "SVDLORA": SVDLoraConfig,
-    "SVDinitLoRA_v1": SVDinitLora_v1_Config,
+    "SVDinitLORA_v1": SVDinitLora_v1_Config,
     # "SVDinitLoRA_v2": SVDinitLora_v2_Config,
     # "SVDinitLoRA_v3": SVDinitLora_v3_Config,
 }

@@ -108,11 +108,11 @@ def generate_and_tokenize_prompt(data_point):
 # model/data params
 base_model: str = "../../models/meta-llama/Meta-Llama-3-8B"  # the only required argument
 data_path: str = "./ft-training_set/commonsense_15k.json"
-output_dir: str = "./outputs/llama3-svdlora"
+output_dir: str = "./outputs/llama3-svdinitlora_v1"
 adapter_name: str = "svdinitlora_v1"
 load_8bit : bool = False
 # training hyperparams
-batch_size: int = 8
+batch_size: int = 16
 micro_batch_size: int = 2
 num_epochs: int = 3
 learning_rate: float = 1e-4
@@ -120,8 +120,8 @@ weight_decay: float = 0.0
 cutoff_len: int = 256
 val_set_size: int = 120
 use_gradient_checkpointing: bool = True
-eval_step: int = 10
-save_step: int = 10
+eval_step: int = 100
+save_step: int = 100
 # lora hyperparams
 lora_r: int = 32
 lora_alpha: int = 64
