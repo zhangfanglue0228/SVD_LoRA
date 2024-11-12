@@ -281,26 +281,29 @@ class Linear(nn.Linear, LoraLayer):
     def train(self, mode: bool=True):
         nn.Linear.train(self, mode)
         self.lora_A.train(mode)
+        self.lora_sigma.train(mode)
         self.lora_B.train(mode)
 
         if not mode and self.merge_weights and not self.merged:
             # Merge the weights and mark it
-            if self.r > 0:
-                self.weight.data += (
-                    transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out)
-                )
+            # if self.r > 0:
+            self.weight.data += (
+                transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out) * self.scaling
+            )
+            print("Merged!")
             self.merged = True
         elif self.merge_weights and self.merged:
             # Make sure that the weights are not merged
-            if self.r > 0:
-                self.weight.data -= (
-                    transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out)
-                )
-            self.merged = True
+            # if self.r > 0:
+            self.weight.data -= (
+                transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out) * self.scaling
+            )
+            self.merged = False
 
     def eval(self):
         nn.Linear.eval(self)
         self.lora_A.eval()
+        self.lora_sigma.eval()
         self.lora_B.eval()
 
     def forward(self, x: torch.Tensor):
