@@ -23,7 +23,7 @@ if is_bnb_available():
 
 
 @dataclass
-class SVDinitLoraConfig(PeftConfig):
+class SVDinitLora_v3_Config(PeftConfig):
     """
     lue
     """
@@ -60,10 +60,10 @@ class SVDinitLoraConfig(PeftConfig):
     )
 
     def __post_init__(self):
-        self.peft_type = PeftType.SVDLORA
+        self.peft_type = PeftType.SVDinitLORA_v3
 
 
-class SVDinitLoraModel(torch.nn.Module):
+class SVDinitLora_v3_Model(torch.nn.Module):
     """
     lue
     """
@@ -137,7 +137,7 @@ class SVDinitLoraModel(torch.nn.Module):
                             kwargs["fan_in_fan_out"] = self.peft_config.fan_in_fan_out = False
                     new_module = MergedLinear(in_features, out_features, bias=bias, **kwargs)
                 self._replace_module(parent, target_name, new_module, target)
-                print(key, "finished")
+                print(key, "finished(Model type: SVDinitLora_v3_Model)")
         if not is_target_modules_in_base_model:
             raise ValueError(
                 f"Target modules {self.peft_config.target_modules} not found in the base model. "
@@ -295,14 +295,14 @@ class Linear(nn.Linear, LoraLayer):
             # Merge the weights and mark it
             if self.r > 0:
                 self.weight.data += (
-                    transpose(self.lora_B.weight @ self.lora_A.weight @ self.svd_sv.weight, fan_in_fan_out=self.fan_in_fan_out)
+                    transpose(self.lora_B.weight @ self.lora_A.weight @ self.svd_sv.weight, fan_in_fan_out=self.fan_in_fan_out) * self.scaling
                 )
             self.merged = True
         elif self.merge_weights and self.merged:
             # Make sure that the weights are not merged
             if self.r > 0:
                 self.weight.data -= (
-                    transpose(self.lora_B.weight @ self.lora_A.weight @ self.svd_sv.weight, fan_in_fan_out=self.fan_in_fan_out)
+                    transpose(self.lora_B.weight @ self.lora_A.weight @ self.svd_sv.weight, fan_in_fan_out=self.fan_in_fan_out) * self.scaling
                 )
             self.merged = True
 

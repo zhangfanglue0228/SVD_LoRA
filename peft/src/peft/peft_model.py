@@ -37,7 +37,18 @@ from transformers import PreTrainedModel
 from transformers.modeling_outputs import SequenceClassifierOutput, TokenClassifierOutput
 from transformers.utils import PushToHubMixin
 
-from .tuners import LoraModel, BottleneckModel, PrefixEncoder, PromptEmbedding, PromptEncoder, DoraModel, SVDLoraModel, SVDinitLora_v1_Model
+from .tuners import (
+        LoraModel, 
+        BottleneckModel, 
+        PrefixEncoder, 
+        PromptEmbedding, 
+        PromptEncoder, 
+        DoraModel, 
+        SVDLoraModel, 
+        SVDinitLora_v1_Model,
+        SVDinitLora_v2_Model,
+        SVDinitLora_v3_Model,
+    )
 from .utils import (
     TRANSFORMERS_MODELS_TO_PREFIX_TUNING_POSTPROCESS_MAPPING,
     WEIGHTS_NAME,
@@ -95,10 +106,10 @@ class PeftModel(PushToHubMixin, torch.nn.Module):
                 self.base_model = SVDLoraModel(peft_config, model)
             elif self.peft_config.peft_type == PeftType.SVDinitLORA_v1:
                 self.base_model = SVDinitLora_v1_Model(peft_config, model)
-            # elif self.peft_config.peft_type == PeftType.SVDinitLORA_v2:
-            #     self.base_model = SVDinitLora_v2_Model(peft_config, model)
-            # elif self.peft_config.peft_type == PeftType.SVDinitLORA_v3:
-            #     self.base_model = SVDinitLora_v3_Model(peft_config, model)
+            elif self.peft_config.peft_type == PeftType.SVDinitLORA_v2:
+                self.base_model = SVDinitLora_v2_Model(peft_config, model)
+            elif self.peft_config.peft_type == PeftType.SVDinitLORA_v3:
+                self.base_model = SVDinitLora_v3_Model(peft_config, model)
         if getattr(self.peft_config, "modules_to_save", None) is not None:
             self.modules_to_save = self.peft_config.modules_to_save
             _set_trainable(self)

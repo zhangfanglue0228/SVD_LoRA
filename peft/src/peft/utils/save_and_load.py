@@ -72,7 +72,12 @@ def get_peft_model_state_dict(model, state_dict=None):
                     bias_name = k.split("lora_")[0] + "bias"
                     if bias_name in state_dict:
                         to_return[bias_name] = state_dict[bias_name]
-    elif model.peft_config.peft_type == PeftType.SVDLORA or model.peft_config.peft_type == PeftType.SVDinitLORA_v1 or model.peft_config.peft_type == PeftType.SVDinitLORA_v2 or model.peft_config.peft_type == PeftType.SVDinitLORA_v3:
+    elif (
+            model.peft_config.peft_type == PeftType.SVDLORA or 
+            model.peft_config.peft_type == PeftType.SVDinitLORA_v1 or 
+            model.peft_config.peft_type == PeftType.SVDinitLORA_v2 or 
+            model.peft_config.peft_type == PeftType.SVDinitLORA_v3
+        ):
 
         bias = model.peft_config.bias
         if bias == "none":
