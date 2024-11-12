@@ -27,6 +27,9 @@ from peft import (  # noqa: E402
     LoraConfig,
     DoraConfig,
     SVDLoraConfig,
+    SVDinitLora_v1_Config,
+    # SVDinitLora_v2_Config,
+    # SVDinitLora_v3_Config,
     BottleneckConfig,
     PrefixTuningConfig,
     get_peft_model,
@@ -250,6 +253,36 @@ def train(
             bias="none",
             task_type="CAUSAL_LM",
         )
+    elif adapter_name == "svdinitlora_v1":
+        print("SVD LoRA init")
+        config = SVDinitLora_v1_Config(
+            r=lora_r,
+            lora_alpha=lora_alpha,
+            target_modules=target_modules,
+            lora_dropout=lora_dropout,
+            bias="none",
+            task_type="CAUSAL_LM",
+        )
+        # elif adapter_name == "svdinitlora_v2":
+        #     print("SVD LoRA init")
+        #     config = SVDinitLora_v2_Config(
+        #         r=lora_r,
+        #         lora_alpha=lora_alpha,
+        #         target_modules=target_modules,
+        #         lora_dropout=lora_dropout,
+        #         bias="none",
+        #         task_type="CAUSAL_LM",
+        #     )
+        # elif adapter_name == "svdinitlora_v3":
+        #     print("SVD LoRA init")
+        #     config = SVDinitLora_v3_Config(
+        #         r=lora_r,
+        #         lora_alpha=lora_alpha,
+        #         target_modules=target_modules,
+        #         lora_dropout=lora_dropout,
+        #         bias="none",
+        #         task_type="CAUSAL_LM",
+        #     )
     elif adapter_name == "bottleneck":
         config = BottleneckConfig(
             bottleneck_size=bottleneck_size,
