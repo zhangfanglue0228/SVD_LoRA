@@ -61,7 +61,7 @@ def train(
         # lora hyperparams
         lora_r: int = 8,
         lora_alpha: int = 16,
-        lora_dropout: float = 0.1,
+        lora_dropout: float = 0.05,
         lora_target_modules: List[str] = None,
         # bottleneck adapter hyperparams
         bottleneck_size: int = 256,
@@ -263,26 +263,26 @@ def train(
             bias="none",
             task_type="CAUSAL_LM",
         )
-        # elif adapter_name == "svdinitlora_v2":
-        #     print("SVD LoRA init")
-        #     config = SVDinitLora_v2_Config(
-        #         r=lora_r,
-        #         lora_alpha=lora_alpha,
-        #         target_modules=target_modules,
-        #         lora_dropout=lora_dropout,
-        #         bias="none",
-        #         task_type="CAUSAL_LM",
-        #     )
-        # elif adapter_name == "svdinitlora_v3":
-        #     print("SVD LoRA init")
-        #     config = SVDinitLora_v3_Config(
-        #         r=lora_r,
-        #         lora_alpha=lora_alpha,
-        #         target_modules=target_modules,
-        #         lora_dropout=lora_dropout,
-        #         bias="none",
-        #         task_type="CAUSAL_LM",
-        #     )
+    elif adapter_name == "svdinitlora_v2":
+        print("SVD LoRA init")
+        config = SVDinitLora_v2_Config(
+            r=lora_r,
+            lora_alpha=lora_alpha,
+            target_modules=target_modules,
+            lora_dropout=lora_dropout,
+            bias="none",
+            task_type="CAUSAL_LM",
+        )
+    elif adapter_name == "svdinitlora_v3":
+        print("SVD LoRA init")
+        config = SVDinitLora_v3_Config(
+            r=lora_r,
+            lora_alpha=lora_alpha,
+            target_modules=target_modules,
+            lora_dropout=lora_dropout,
+            bias="none",
+            task_type="CAUSAL_LM",
+        )
     elif adapter_name == "bottleneck":
         config = BottleneckConfig(
             bottleneck_size=bottleneck_size,
