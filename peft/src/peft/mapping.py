@@ -60,8 +60,8 @@ PEFT_TYPE_TO_CONFIG_MAPPING = {
     "DORA": DoraConfig,
     "SVDLORA": SVDLoraConfig,
     "SVDinitLORA_v1": SVDinitLora_v1_Config,
-    "SVDinitLoRA_v2": SVDinitLora_v2_Config,
-    "SVDinitLoRA_v3": SVDinitLora_v3_Config,
+    "SVDinitLORA_v2": SVDinitLora_v2_Config,
+    "SVDinitLORA_v3": SVDinitLora_v3_Config,
 }
 
 TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING = {
