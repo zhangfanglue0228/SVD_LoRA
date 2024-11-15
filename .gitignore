@@ -1,4 +1,5 @@
 *.ipynb
+*.xlsx
 test.py
 /dataset
 /ft-training_set
