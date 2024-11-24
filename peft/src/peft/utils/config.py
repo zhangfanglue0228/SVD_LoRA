@@ -31,10 +31,10 @@ class PeftType(str, enum.Enum):
     LORA = "LORA"
     BOTTLENECK = "BOTTLENECK"
     DORA = "DORA"
+    # SVDLORA = "SVDLORA"
+    # SVDinitLORA_v1 = "SVDinitLORA_v1"
     SVDLORA = "SVDLORA"
-    SVDinitLORA_v1 = "SVDinitLORA_v1"
-    SVDinitLORA_v2 = "SVDinitLORA_v2"
-    SVDinitLORA_v3 = "SVDinitLORA_v3"
+    # SVDinitLORA_v3 = "SVDinitLORA_v3"
 
 
 

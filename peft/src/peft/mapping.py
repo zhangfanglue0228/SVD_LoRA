@@ -36,10 +36,10 @@ from .tuners import (
     PromptTuningConfig, 
     BottleneckConfig, 
     DoraConfig, 
-    SVDLoraConfig,
-    SVDinitLora_v1_Config,
-    SVDinitLora_v2_Config,
-    SVDinitLora_v3_Config,
+    # SVDLoraConfig,
+    # SVDinitLora_v1_Config,
+    SVDLora_Config,
+    # SVDinitLora_v3_Config,
 )
 from .utils import PromptLearningConfig
 
@@ -58,10 +58,10 @@ PEFT_TYPE_TO_CONFIG_MAPPING = {
     "LORA": LoraConfig,
     "BOTTLENECK": BottleneckConfig,
     "DORA": DoraConfig,
-    "SVDLORA": SVDLoraConfig,
-    "SVDinitLORA_v1": SVDinitLora_v1_Config,
-    "SVDinitLORA_v2": SVDinitLora_v2_Config,
-    "SVDinitLORA_v3": SVDinitLora_v3_Config,
+    # "SVDLORA": SVDLoraConfig,
+    # "SVDinitLORA_v1": SVDinitLora_v1_Config,
+    "SVDLORA": SVDLora_Config,
+    # "SVDinitLORA_v3": SVDinitLora_v3_Config,
 }
 
 TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING = {
@@ -191,17 +191,17 @@ def _prepare_dora_config(peft_config, model_config):
         peft_config.merge_weights = True
     return peft_config
 
-def _prepare_svdlora_config(peft_config, model_config):
-    if peft_config.target_modules is None:
-        if model_config["model_type"] not in TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING:
-            raise ValueError("Please specify `target_modules` in `peft_config`")
-        peft_config.target_modules = TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING[model_config["model_type"]]
-    # if len(peft_config.target_modules) == 1:
-    #     peft_config.fan_in_fan_out = True
-    #     peft_config.enable_lora = [True, False, True]
-    if peft_config.inference_mode:
-        peft_config.merge_weights = True
-    return peft_config
+# def _prepare_svdlora_config(peft_config, model_config):
+#     if peft_config.target_modules is None:
+#         if model_config["model_type"] not in TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING:
+#             raise ValueError("Please specify `target_modules` in `peft_config`")
+#         peft_config.target_modules = TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING[model_config["model_type"]]
+#     # if len(peft_config.target_modules) == 1:
+#     #     peft_config.fan_in_fan_out = True
+#     #     peft_config.enable_lora = [True, False, True]
+#     if peft_config.inference_mode:
+#         peft_config.merge_weights = True
+#     return peft_config
 
 def _prepare_svdinitlora_config(peft_config, model_config):
     if peft_config.target_modules is None:
@@ -253,8 +253,8 @@ def get_peft_model(model, peft_config):
         elif peft_config.peftype == "DORA":
             peft_config = _prepare_dora_config(peft_config, model_config)
             return PeftModel(model, peft_config)
-        elif peft_config.peftype == "SVDLORA":
-            peft_config = _prepare_svdlora_config(peft_config, model_config)
+        # elif peft_config.peftype == "SVDLORA":
+        #     peft_config = _prepare_svdlora_config(peft_config, model_config)
             return PeftModel(model, peft_config)
         elif "SVDinitLORA" in peft_config.peftype:
             peft_config = _prepare_svdinitlora_config(peft_config, model_config)
@@ -269,8 +269,8 @@ def get_peft_model(model, peft_config):
             peft_config = _prepare_lora_config(peft_config, model_config)
         elif peft_config.peft_type == "DORA":
             peft_config = _prepare_dora_config(peft_config, model_config)
-        elif peft_config.peft_type == "SVDLORA":
-            peft_config = _prepare_svdlora_config(peft_config, model_config)
+        # elif peft_config.peft_type == "SVDLORA":
+        #     peft_config = _prepare_svdlora_config(peft_config, model_config)
         elif "SVDinitLORA" in peft_config.peft_type:
             peft_config = _prepare_svdinitlora_config(peft_config, model_config)
     else:

@@ -15,28 +15,28 @@ if %ERRORLEVEL% NEQ 0 (
 
 :: 执行第一个 Python 命令
 echo 1st command
-python commonsense_evaluate.py --model LLaMA-13B --adapter SVDinitLoRA_v2 --dataset boolq --base_model ..\..\models\yahma\llama-13b-hf --batch_size 1 --lora_weights outputs/llama-13B-svdinitlora_v2_170k_B | tee -a outputs/llama-13B-svdinitlora_v2_170k_B/boolq.txt
+python commonsense_evaluate.py --model LLaMA-13B --adapter SVDLoRA --dataset boolq --base_model ..\..\models\yahma\llama-13b-hf --batch_size 1 --lora_weights outputs/llama-13B-scdlora_170k_B | tee -a outputs/llama-13B-scdlora_170k_B/boolq.txt
 
 echo 2nd command
-python commonsense_evaluate.py --model LLaMA-13B --adapter SVDinitLoRA_v2 --dataset piqa --base_model ..\..\models\yahma\llama-13b-hf --batch_size 1 --lora_weights outputs/llama-13B-svdinitlora_v2_170k_B | tee -a outputs/llama-13B-svdinitlora_v2_170k_B/piqa.txt
+python commonsense_evaluate.py --model LLaMA-13B --adapter SVDLoRA --dataset piqa --base_model ..\..\models\yahma\llama-13b-hf --batch_size 1 --lora_weights outputs/llama-13B-scdlora_170k_B | tee -a outputs/llama-13B-scdlora_170k_B/piqa.txt
 
 echo 3rd command
-python commonsense_evaluate.py --model LLaMA-13B --adapter SVDinitLoRA_v2 --dataset social_i_qa --base_model ..\..\models\yahma\llama-13b-hf --batch_size 1 --lora_weights outputs/llama-13B-svdinitlora_v2_170k_B | tee -a outputs/llama-13B-svdinitlora_v2_170k_B/social_i_qa.txt
+python commonsense_evaluate.py --model LLaMA-13B --adapter SVDLoRA --dataset social_i_qa --base_model ..\..\models\yahma\llama-13b-hf --batch_size 1 --lora_weights outputs/llama-13B-scdlora_170k_B | tee -a outputs/llama-13B-scdlora_170k_B/social_i_qa.txt
 
 echo 4th command
-python commonsense_evaluate.py --model LLaMA-13B --adapter SVDinitLoRA_v2 --dataset hellaswag --base_model ..\..\models\yahma\llama-13b-hf --batch_size 1 --lora_weights outputs/llama-13B-svdinitlora_v2_170k_B | tee -a outputs/llama-13B-svdinitlora_v2_170k_B/hellaswag.txt
+python commonsense_evaluate.py --model LLaMA-13B --adapter SVDLoRA --dataset hellaswag --base_model ..\..\models\yahma\llama-13b-hf --batch_size 1 --lora_weights outputs/llama-13B-scdlora_170k_B | tee -a outputs/llama-13B-scdlora_170k_B/hellaswag.txt
 
 echo 5th command
-python commonsense_evaluate.py --model LLaMA-13B --adapter SVDinitLoRA_v2 --dataset winogrande --base_model ..\..\models\yahma\llama-13b-hf --batch_size 1 --lora_weights outputs/llama-13B-svdinitlora_v2_170k_B | tee -a outputs/llama-13B-svdinitlora_v2_170k_B/winogrande.txt
+python commonsense_evaluate.py --model LLaMA-13B --adapter SVDLoRA --dataset winogrande --base_model ..\..\models\yahma\llama-13b-hf --batch_size 1 --lora_weights outputs/llama-13B-scdlora_170k_B | tee -a outputs/llama-13B-scdlora_170k_B/winogrande.txt
 
 echo 6th command
-python commonsense_evaluate.py --model LLaMA-13B --adapter SVDinitLoRA_v2 --dataset ARC-Challenge --base_model ..\..\models\yahma\llama-13b-hf --batch_size 1 --lora_weights outputs/llama-13B-svdinitlora_v2_170k_B | tee -a outputs/llama-13B-svdinitlora_v2_170k_B/ARC-Challenge.txt
+python commonsense_evaluate.py --model LLaMA-13B --adapter SVDLoRA --dataset ARC-Challenge --base_model ..\..\models\yahma\llama-13b-hf --batch_size 1 --lora_weights outputs/llama-13B-scdlora_170k_B | tee -a outputs/llama-13B-scdlora_170k_B/ARC-Challenge.txt
 
 echo 7th command
-python commonsense_evaluate.py --model LLaMA-13B --adapter SVDinitLoRA_v2 --dataset ARC-Easy --base_model ..\..\models\yahma\llama-13b-hf --batch_size 1 --lora_weights outputs/llama-13B-svdinitlora_v2_170k_B | tee -a outputs/llama-13B-svdinitlora_v2_170k_B/ARC-Easy.txt
+python commonsense_evaluate.py --model LLaMA-13B --adapter SVDLoRA --dataset ARC-Easy --base_model ..\..\models\yahma\llama-13b-hf --batch_size 1 --lora_weights outputs/llama-13B-scdlora_170k_B | tee -a outputs/llama-13B-scdlora_170k_B/ARC-Easy.txt
 
 echo 8th command
-python commonsense_evaluate.py --model LLaMA-13B --adapter SVDinitLoRA_v2 --dataset openbookqa --base_model ..\..\models\yahma\llama-13b-hf --batch_size 1 --lora_weights outputs/llama-13B-svdinitlora_v2_170k_B | tee -a outputs/llama-13B-svdinitlora_v2_170k_B/openbookqa.txt
+python commonsense_evaluate.py --model LLaMA-13B --adapter SVDLoRA --dataset openbookqa --base_model ..\..\models\yahma\llama-13b-hf --batch_size 1 --lora_weights outputs/llama-13B-scdlora_170k_B | tee -a outputs/llama-13B-scdlora_170k_B/openbookqa.txt
 
 :: 运行完成
 echo success!

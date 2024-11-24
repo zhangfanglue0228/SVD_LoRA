@@ -73,10 +73,10 @@ def get_peft_model_state_dict(model, state_dict=None):
                     if bias_name in state_dict:
                         to_return[bias_name] = state_dict[bias_name]
     elif (
-            model.peft_config.peft_type == PeftType.SVDLORA or 
-            model.peft_config.peft_type == PeftType.SVDinitLORA_v1 or 
-            model.peft_config.peft_type == PeftType.SVDinitLORA_v2 or 
-            model.peft_config.peft_type == PeftType.SVDinitLORA_v3
+            # model.peft_config.peft_type == PeftType.SVDLORA or 
+            # model.peft_config.peft_type == PeftType.SVDinitLORA_v1 or 
+            model.peft_config.peft_type == PeftType.SVDLORA
+            # model.peft_config.peft_type == PeftType.SVDinitLORA_v3
         ):
 
         bias = model.peft_config.bias
@@ -138,10 +138,10 @@ def set_peft_model_state_dict(model, peft_model_state_dict):
     if (model.peft_config.peft_type != PeftType.LORA and 
         model.peft_config.peft_type != PeftType.BOTTLENECK and 
         model.peft_config.peft_type != PeftType.DORA and 
-        model.peft_config.peft_type != PeftType.SVDLORA and
-        model.peft_config.peft_type != PeftType.SVDinitLORA_v1 and
-        model.peft_config.peft_type != PeftType.SVDinitLORA_v2 and
-        model.peft_config.peft_type != PeftType.SVDinitLORA_v3
+        # model.peft_config.peft_type != PeftType.SVDLORA and
+        # model.peft_config.peft_type != PeftType.SVDinitLORA_v1 and
+        model.peft_config.peft_type != PeftType.SVDLORA
+        # model.peft_config.peft_type != PeftType.SVDinitLORA_v3
         ):
         model.prompt_encoder.embedding.load_state_dict(
             {"weight": peft_model_state_dict["prompt_embeddings"]}, strict=True

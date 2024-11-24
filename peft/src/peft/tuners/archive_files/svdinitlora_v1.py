@@ -11,7 +11,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from transformers.pytorch_utils import Conv1D
 
-from ..utils import PeftConfig, PeftType, transpose
+from ...utils import PeftConfig, PeftType, transpose
 
 
 def is_bnb_available():
@@ -23,7 +23,7 @@ if is_bnb_available():
 
 
 @dataclass
-class SVDinitLora_v2_Config(PeftConfig):
+class SVDinitLora_v1_Config(PeftConfig):
     """
     lue
     """
@@ -60,10 +60,10 @@ class SVDinitLora_v2_Config(PeftConfig):
     )
 
     def __post_init__(self):
-        self.peft_type = PeftType.SVDinitLORA_v2
+        self.peft_type = PeftType.SVDinitLORA_v1
 
 
-class SVDinitLora_v2_Model(torch.nn.Module):
+class SVDinitLora_v1_Model(torch.nn.Module):
     """
     lue
     """
@@ -137,7 +137,7 @@ class SVDinitLora_v2_Model(torch.nn.Module):
                             kwargs["fan_in_fan_out"] = self.peft_config.fan_in_fan_out = False
                     new_module = MergedLinear(in_features, out_features, bias=bias, **kwargs)
                 self._replace_module(parent, target_name, new_module, target)
-                print(key, "finished(Model type: SVDinitLora_v2_Model)")
+                print(key, "finished(Model type: SVDinitLora_v1_Model)")
         if not is_target_modules_in_base_model:
             raise ValueError(
                 f"Target modules {self.peft_config.target_modules} not found in the base model. "
@@ -274,8 +274,6 @@ class Linear(nn.Linear, LoraLayer):
             self.lora_A.weight.data.copy_(v.detach())
             self.lora_sigma.weight.data.copy_(s.detach())
             self.lora_B.weight.data.copy_(u.detach())
-            self.weight_low = transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out)
-            self.weight.data -= self.weight_low
             # self.svd_v.weight.data.copy_(v.detach())
             del copy_weight, u, s, v
             # torch.cuda.empty_cache()
@@ -292,16 +290,15 @@ class Linear(nn.Linear, LoraLayer):
             self.weight.data += (
                 transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out) * self.scaling
             )
-            self.merged = True
             print("Merged!")
+            self.merged = True
         elif self.merge_weights and self.merged:
             # Make sure that the weights are not merged
             # if self.r > 0:
             self.weight.data -= (
                 transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out) * self.scaling
             )
-            self.weight.data += self.weight_low
-            self.merged = True
+            self.merged = False
 
     def eval(self):
         nn.Linear.eval(self)
@@ -317,8 +314,8 @@ class Linear(nn.Linear, LoraLayer):
         
         elif self.r > 0 and not self.merged:
             result = F.linear(x, transpose(self.weight, self.fan_in_fan_out), bias=self.bias)
-            # if self.r > 0:
-            result += (((self.lora_dropout(x.to(self.lora_A.weight.dtype)) @ self.lora_A.weight.T) @ self.lora_sigma.weight.T) @ self.lora_B.weight.T) * self.scaling
+            if self.r > 0:
+                result += (((self.lora_dropout(x.to(self.lora_A.weight.dtype)) @ self.lora_A.weight.T) @ self.lora_sigma.weight.T) @ self.lora_B.weight.T) * self.scaling
         else:
             result = F.linear(x, transpose(self.weight, self.fan_in_fan_out), bias=self.bias)
 

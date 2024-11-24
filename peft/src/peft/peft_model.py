@@ -44,10 +44,10 @@ from .tuners import (
         PromptEmbedding, 
         PromptEncoder, 
         DoraModel, 
-        SVDLoraModel, 
-        SVDinitLora_v1_Model,
-        SVDinitLora_v2_Model,
-        SVDinitLora_v3_Model,
+        # SVDLoraModel, 
+        # SVDinitLora_v1_Model,
+        SVDLora_Model,
+        # SVDinitLora_v3_Model,
     )
 from .utils import (
     TRANSFORMERS_MODELS_TO_PREFIX_TUNING_POSTPROCESS_MAPPING,
@@ -102,14 +102,14 @@ class PeftModel(PushToHubMixin, torch.nn.Module):
                 self.base_model = BottleneckModel(peft_config, model)
             elif self.peft_config.peft_type == PeftType.DORA:
                 self.base_model = DoraModel(peft_config, model)
+            # elif self.peft_config.peft_type == PeftType.SVDLORA:
+            #     self.base_model = SVDLoraModel(peft_config, model)
+            # elif self.peft_config.peft_type == PeftType.SVDinitLORA_v1:
+            #     self.base_model = SVDinitLora_v1_Model(peft_config, model)
             elif self.peft_config.peft_type == PeftType.SVDLORA:
-                self.base_model = SVDLoraModel(peft_config, model)
-            elif self.peft_config.peft_type == PeftType.SVDinitLORA_v1:
-                self.base_model = SVDinitLora_v1_Model(peft_config, model)
-            elif self.peft_config.peft_type == PeftType.SVDinitLORA_v2:
-                self.base_model = SVDinitLora_v2_Model(peft_config, model)
-            elif self.peft_config.peft_type == PeftType.SVDinitLORA_v3:
-                self.base_model = SVDinitLora_v3_Model(peft_config, model)
+                self.base_model = SVDLora_Model(peft_config, model)
+            # elif self.peft_config.peft_type == PeftType.SVDinitLORA_v3:
+            #     self.base_model = SVDinitLora_v3_Model(peft_config, model)
         if getattr(self.peft_config, "modules_to_save", None) is not None:
             self.modules_to_save = self.peft_config.modules_to_save
             _set_trainable(self)
@@ -210,7 +210,15 @@ class PeftModel(PushToHubMixin, torch.nn.Module):
                 )
             model = dispatch_model(model, device_map=device_map)
             hook = AlignDevicesHook(io_same_device=True)
-            if model.peft_config.peft_type == PeftType.LORA or model.peft_config.peft_type == PeftType.BOTTLENECK or model.peft_config.peft_type == PeftType.DORA or model.peft_config.peft_type == PeftType.SVDLORA or model.peft_config.peft_type == PeftType.SVDinitLORA_v1 or model.peft_config.peft_type == PeftType.SVDinitLORA_v2 or model.peft_config.peft_type == PeftType.SVDinitLORA_v3:
+            if (
+                    model.peft_config.peft_type == PeftType.LORA or 
+                    model.peft_config.peft_type == PeftType.BOTTLENECK or 
+                    model.peft_config.peft_type == PeftType.DORA or 
+                    # model.peft_config.peft_type == PeftType.SVDLORA or 
+                    # model.peft_config.peft_type == PeftType.SVDinitLORA_v1 or 
+                    model.peft_config.peft_type == PeftType.SVDLORA
+                    # model.peft_config.peft_type == PeftType.SVDinitLORA_v3
+                ):
                 add_hook_to_module(model.base_model.model, hook)
             else:
                 remove_hook_from_submodules(model.prompt_encoder)

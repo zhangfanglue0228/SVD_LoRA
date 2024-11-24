@@ -1,6 +1,6 @@
 CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
     --model LLaMA2-7B \
-    --adapter SVDinitLoRA_v2 \
+    --adapter SVDLoRA \
     --dataset boolq \
     --base_model '../../models/yahma/llama-13b-hf' \
     --batch_size 1 \
@@ -8,7 +8,7 @@ CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
 
 CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
     --model LLaMA2-7B \
-    --adapter SVDinitLoRA_v2 \
+    --adapter SVDLoRA \
     --dataset piqa \
     --base_model '../../models/yahma/llama-13b-hf' \
     --batch_size 1 \
@@ -16,7 +16,7 @@ CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
 
 CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
     --model LLaMA2-7B \
-    --adapter SVDinitLoRA_v2 \
+    --adapter SVDLoRA \
     --dataset social_i_qa \
     --base_model '../../models/yahma/llama-13b-hf' \
     --batch_size 1 \
@@ -24,7 +24,7 @@ CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
 
 CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
     --model LLaMA2-7B \
-    --adapter SVDinitLoRA_v2 \
+    --adapter SVDLoRA \
     --dataset hellaswag \
     --base_model '../../models/yahma/llama-13b-hf' \
     --batch_size 1 \
@@ -32,7 +32,7 @@ CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
 
 CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
     --model LLaMA2-7B \
-    --adapter SVDinitLoRA_v2 \
+    --adapter SVDLoRA \
     --dataset winogrande \
     --base_model '../../models/yahma/llama-13b-hf' \
     --batch_size 1 \
@@ -40,7 +40,7 @@ CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
 
 CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
     --model LLaMA2-7B \
-    --adapter SVDinitLoRA_v2 \
+    --adapter SVDLoRA \
     --dataset ARC-Challenge \
     --base_model '../../models/yahma/llama-13b-hf' \
     --batch_size 1 \
@@ -48,7 +48,7 @@ CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
 
 CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
     --model LLaMA2-7B \
-    --adapter SVDinitLoRA_v2 \
+    --adapter SVDLoRA \
     --dataset ARC-Easy \
     --base_model '../../models/yahma/llama-13b-hf' \
     --batch_size 1 \
@@ -56,7 +56,7 @@ CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
 
 CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
     --model LLaMA2-7B \
-    --adapter SVDinitLoRA_v2 \
+    --adapter SVDLoRA \
     --dataset openbookqa \
     --base_model '../../models/yahma/llama-13b-hf' \
     --batch_size 1 \

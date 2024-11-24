@@ -16,10 +16,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from .svdlora import SVDLoraConfig, SVDLoraModel
-from .svdinitlora_v1 import SVDinitLora_v1_Config, SVDinitLora_v1_Model
-from .svdinitlora_v2 import SVDinitLora_v2_Config, SVDinitLora_v2_Model
-from .svdinitlora_v3 import SVDinitLora_v3_Config, SVDinitLora_v3_Model
+
+
+# from .archive_files.svdlora import SVDLoraConfig, SVDLoraModel
+# from .archive_files.svdinitlora_v1 import SVDinitLora_v1_Config, SVDinitLora_v1_Model
+from .svdlora import SVDLora_Config, SVDLora_Model
+# from .archive_files.svdinitlora_v3 import SVDinitLora_v3_Config, SVDinitLora_v3_Model
 from .dora import DoraConfig, DoraModel
 from .lora import LoraConfig, LoraModel
 from .bottleneck import BottleneckConfig, BottleneckModel
