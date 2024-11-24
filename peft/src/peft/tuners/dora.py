@@ -393,7 +393,7 @@ class Linear(nn.Linear, LoraLayer):
                 weight = norm_scale * self.weight
                 self.weight.data.copy_(weight.detach())
             else:
-                # "else" means train magnitude & direction
+                # "else" means train magnitude & direction(LoRA)
                 if self.r > 0:
                     new_weight_v = self.weight + transpose(self.lora_B.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out) * self.scaling
                     weight = ( self.weight_m_wdecomp.weight / (torch.linalg.norm(new_weight_v,dim=1)).unsqueeze(1)) * new_weight_v
