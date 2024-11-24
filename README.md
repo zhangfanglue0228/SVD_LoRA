@@ -14,6 +14,8 @@ Bad😔
 
 ## Second Try
 
+**SVDLoRA**
+
 SVD is applied to the matrix, get $U$, $\Sigma$, $V$ matrices
 
 The difference between the fine-tuned $U \Sigma V$ matrix and the original $U \Sigma V$ matrix is used as LoRA
