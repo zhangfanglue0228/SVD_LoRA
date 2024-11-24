@@ -388,10 +388,12 @@ class Linear(nn.Linear, LoraLayer):
         if not mode and self.merge_weights and not self.merged:
             # Merge the weights and mark it
             if self.Wdecompose:
+                # "self.Wdecompose(=True)" means only train magnitude
                 norm_scale = ( self.weight_m_wdecomp.weight / (torch.linalg.norm(self.weight,dim=1)).unsqueeze(1) )
                 weight = norm_scale * self.weight
                 self.weight.data.copy_(weight.detach())
             else:
+                # "else" means train magnitude & direction
                 if self.r > 0:
                     new_weight_v = self.weight + transpose(self.lora_B.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out) * self.scaling
                     weight = ( self.weight_m_wdecomp.weight / (torch.linalg.norm(new_weight_v,dim=1)).unsqueeze(1)) * new_weight_v
@@ -420,9 +422,9 @@ class Linear(nn.Linear, LoraLayer):
             # self.weight: [out_features, in_features]
             # torch.linalg.norm(self.weight,dim=1): [1, out_features]
             # norm_scale: [1, out_features]
-            # ---------------------!!!!!!---------------------
-            # !!only finetune magnitude matrix!!
-            # ---------------------!!!!!!---------------------
+            # ------------------------------------------
+            # only finetune magnitude matrix
+            # ------------------------------------------
             norm_scale = self.weight_m_wdecomp.weight.view(-1) / (torch.linalg.norm(self.weight,dim=1))
 
             org_result = (F.linear(x, transpose(self.weight, self.fan_in_fan_out)))
@@ -433,9 +435,9 @@ class Linear(nn.Linear, LoraLayer):
                     result += self.bias.view(1, -1).expand_as(result)
 
         elif self.r > 0 and not self.merged:
-            # ---------------------!!!!!!---------------------
-            # !!finetune magnitude and direction matrix!!
-            # ---------------------!!!!!!---------------------
+            # ------------------------------------------
+            # finetune magnitude and direction matrix
+            # ------------------------------------------
             new_weight_v = self.weight + (self.lora_B.weight @ self.lora_A.weight) * self.scaling
 
             if self.dora_simple:
@@ -455,9 +457,9 @@ class Linear(nn.Linear, LoraLayer):
             result += ( norm_scale * (self.lora_B(self.lora_A(dropout_x.to(self.lora_A.weight.dtype))))) * self.scaling
             
         else:
-            # ---------------------!!!!!!---------------------
+            # ------------------------------------------
             # self.weight has merged finetuned matrix weight
-            # ---------------------!!!!!!---------------------
+            # ------------------------------------------
             result = F.linear(x, transpose(self.weight, self.fan_in_fan_out), bias=self.bias)
 
         if result.dtype != previous_dtype:
