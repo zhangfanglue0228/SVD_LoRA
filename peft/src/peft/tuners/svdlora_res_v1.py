@@ -256,11 +256,21 @@ class Linear(nn.Linear, LoraLayer):
             self.lora_A = nn.Linear(in_features, r, bias=False)
             self.lora_sigma = nn.Linear(r, r, bias=False)
             self.lora_B = nn.Linear(r, out_features, bias=False)
-            self.weight_low = nn.Linear(in_features, out_features, bias=True)
+            # to store the W_L
+            # self.weight_low = nn.Linear(in_features, out_features, bias=True)
+            self.U_matrix = nn.Linear(r, out_features)
+            self.Sigma_matrix = nn.Linear(r, r)
+            self.V_matrix = nn.Linear(in_features, r)
+            # self.U_matrix = None
+            # self.Sigma_matrix = None
+            # self.V_matrix = None
             self.coefficient = nn.Parameter(torch.tensor(0.0))
             self.scaling = self.lora_alpha / self.r
             self.weight.requires_grad = False
-            self.weight_low.requires_grad = False
+            # self.weight_low.requires_grad = False
+            self.U_matrix.requires_grad = False
+            self.Sigma_matrix.requires_grad = False
+            self.V_matrix.requires_grad = False
         self.reset_parameters()
         if fan_in_fan_out:
             self.weight.data = self.weight.data.T
@@ -279,7 +289,13 @@ class Linear(nn.Linear, LoraLayer):
             self.lora_A.weight.data.copy_(v.detach())
             self.lora_sigma.weight.data.copy_(s.detach())
             self.lora_B.weight.data.copy_(u.detach())
-            self.weight_low.data = transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out).detach()
+            self.V_matrix.weight.data.copy_(v.detach())
+            self.Sigma_matrix.weight.data.copy_(s.detach())
+            self.U_matrix.weight.data.copy_(u.detach())
+            # self.V_matrix = v.detach()
+            # self.Sigma_matrix = s.detach()
+            # self.U_matrix = u.detach()
+            # self.weight_low.data = transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out).detach()
             # self.weight_low = self.weight_low.to(device)
             # self.weight.data -= self.weight_low
             # self.svd_v.weight.data.copy_(v.detach())
@@ -327,7 +343,8 @@ class Linear(nn.Linear, LoraLayer):
             result = F.linear(x, transpose(self.weight, self.fan_in_fan_out), bias=self.bias)
             # if self.r > 0:
             result += ((((self.lora_dropout(x.to(self.lora_A.weight.dtype)) @ self.lora_A.weight.T) @ self.lora_sigma.weight.T) @ self.lora_B.weight.T)) * self.scaling * self.coefficient
-            result -= (x.to(self.weight_low.weight.dtype) @ self.weight_low.weight.T) * self.scaling * self.coefficient
+            # weight_low = self.U_matrix @ self.Sigma_matrix @ self.V_matrix
+            result -= (x.to(self.V_matrix.weight.dtype) @ self.V_matrix.weight.T @ self.Sigma_matrix.weight.T @ self.U_matrix.weight.T) * self.scaling * self.coefficient
         else:
             result = F.linear(x, transpose(self.weight, self.fan_in_fan_out), bias=self.bias)
 
