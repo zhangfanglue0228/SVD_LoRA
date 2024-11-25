@@ -198,6 +198,8 @@ def mark_only_lora_as_trainable(model: nn.Module, bias: str = "none") -> None:
     for n, p in model.named_parameters():
         if "lora_" not in n:
             p.requires_grad = False
+        if "coefficient" in n:
+            p.requires_grad = True
     if bias == "none":
         return
     elif bias == "all":
@@ -254,9 +256,11 @@ class Linear(nn.Linear, LoraLayer):
             self.lora_A = nn.Linear(in_features, r, bias=False)
             self.lora_sigma = nn.Linear(r, r, bias=False)
             self.lora_B = nn.Linear(r, out_features, bias=False)
-            self.coefficient = nn.Parameter(torch.tensor(1.0))
+            self.weight_low = nn.Linear(in_features, out_features, bias=True)
+            self.coefficient = nn.Parameter(torch.tensor(0.0))
             self.scaling = self.lora_alpha / self.r
             self.weight.requires_grad = False
+            self.weight_low.requires_grad = False
         self.reset_parameters()
         if fan_in_fan_out:
             self.weight.data = self.weight.data.T
@@ -275,7 +279,8 @@ class Linear(nn.Linear, LoraLayer):
             self.lora_A.weight.data.copy_(v.detach())
             self.lora_sigma.weight.data.copy_(s.detach())
             self.lora_B.weight.data.copy_(u.detach())
-            self.weight_low = transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out)
+            self.weight_low.data = transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out).detach()
+            # self.weight_low = self.weight_low.to(device)
             # self.weight.data -= self.weight_low
             # self.svd_v.weight.data.copy_(v.detach())
             del copy_weight, u, s, v
@@ -292,7 +297,7 @@ class Linear(nn.Linear, LoraLayer):
             # Merge the weights and mark it
             # if self.r > 0:
             self.weight.data += (
-                (transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out) - self.weight_low) * self.scaling * self.coefficient
+                (transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out) - self.weight_low.weight) * self.scaling * self.coefficient
             )
             self.merged = True
             print("Merged!")
@@ -300,10 +305,10 @@ class Linear(nn.Linear, LoraLayer):
             # Make sure that the weights are not merged
             # if self.r > 0:
             self.weight.data -= (
-                (transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out) - self.weight_low) * self.scaling * self.coefficient
+                (transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out) - self.weight_low.weight) * self.scaling * self.coefficient
             )
-            self.weight.data += self.weight_low
-            self.merged = True
+            # self.weight.data += self.weight_low
+            self.merged = False
 
     def eval(self):
         nn.Linear.eval(self)
@@ -321,7 +326,8 @@ class Linear(nn.Linear, LoraLayer):
         elif self.r > 0 and not self.merged:
             result = F.linear(x, transpose(self.weight, self.fan_in_fan_out), bias=self.bias)
             # if self.r > 0:
-            result += ((((self.lora_dropout(x.to(self.lora_A.weight.dtype)) @ self.lora_A.weight.T) @ self.lora_sigma.weight.T) @ self.lora_B.weight.T) - self.weight_low) * self.scaling * self.coefficient
+            result += ((((self.lora_dropout(x.to(self.lora_A.weight.dtype)) @ self.lora_A.weight.T) @ self.lora_sigma.weight.T) @ self.lora_B.weight.T)) * self.scaling * self.coefficient
+            result -= (x.to(self.weight_low.weight.dtype) @ self.weight_low.weight.T) * self.scaling * self.coefficient
         else:
             result = F.linear(x, transpose(self.weight, self.fan_in_fan_out), bias=self.bias)
 

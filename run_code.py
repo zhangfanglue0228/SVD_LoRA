@@ -124,7 +124,7 @@ weight_decay: float = 0.0
 cutoff_len: int = 256
 val_set_size: int = 120
 use_gradient_checkpointing: bool = True
-eval_step: int = 100
+eval_step: int = 10
 save_step: int = 100
 # lora hyperparams
 lora_r: int = 32
@@ -137,7 +137,7 @@ non_linearity: str = "tanh"
 adapter_dropout: float = 0.0
 use_parallel_adapter: bool = False
 use_adapterp: bool = False
-target_modules: List[str] = ["q_proj", "k_proj", "v_proj", "up_proj", "down_proj"]
+target_modules: List[str] = ["q_proj","v_proj"]
 # Dora hyperparams
 dora_simple: bool = True
 Wdecompose_target_modules: List[str] = None
