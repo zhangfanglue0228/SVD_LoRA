@@ -46,8 +46,12 @@ from .tuners import (
         DoraModel, 
         # SVDLoraModel, 
         # SVDinitLora_v1_Model,
-        SVDLora_Model,
         # SVDinitLora_v3_Model,
+        SVDLora_Model,
+        SVDLora_res_v1_Model,
+        SVDLora_res_v2_Model,
+        SVDLora_res_v3_Model,
+        # SVDLora_res_v1_Model,
     )
 from .utils import (
     TRANSFORMERS_MODELS_TO_PREFIX_TUNING_POSTPROCESS_MAPPING,
@@ -106,10 +110,18 @@ class PeftModel(PushToHubMixin, torch.nn.Module):
             #     self.base_model = SVDLoraModel(peft_config, model)
             # elif self.peft_config.peft_type == PeftType.SVDinitLORA_v1:
             #     self.base_model = SVDinitLora_v1_Model(peft_config, model)
-            elif self.peft_config.peft_type == PeftType.SVDLORA:
-                self.base_model = SVDLora_Model(peft_config, model)
             # elif self.peft_config.peft_type == PeftType.SVDinitLORA_v3:
             #     self.base_model = SVDinitLora_v3_Model(peft_config, model)
+            elif self.peft_config.peft_type == PeftType.SVDLORA:
+                self.base_model = SVDLora_Model(peft_config, model)
+            elif self.peft_config.peft_type == PeftType.SVDLORA_res_v1:
+                self.base_model = SVDLora_res_v1_Model(peft_config, model)
+            elif self.peft_config.peft_type == PeftType.SVDLORA_res_v2:
+                self.base_model = SVDLora_res_v2_Model(peft_config, model)
+            elif self.peft_config.peft_type == PeftType.SVDLORA_res_v3:
+                self.base_model = SVDLora_res_v3_Model(peft_config, model)
+            # elif self.peft_config.peft_type == PeftType.SVDLORA_res_v4:
+            #     self.base_model = SVDLora_res_v4_Model(peft_config, model)
         if getattr(self.peft_config, "modules_to_save", None) is not None:
             self.modules_to_save = self.peft_config.modules_to_save
             _set_trainable(self)
