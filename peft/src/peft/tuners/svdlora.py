@@ -275,7 +275,7 @@ class Linear(nn.Linear, LoraLayer):
             self.lora_sigma.weight.data.copy_(s.detach())
             self.lora_B.weight.data.copy_(u.detach())
             self.weight_low = transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out)
-            self.weight.data -= self.weight_low
+            self.weight.data -= self.weight_low * self.scaling
             # self.svd_v.weight.data.copy_(v.detach())
             del copy_weight, u, s, v
             # torch.cuda.empty_cache()
