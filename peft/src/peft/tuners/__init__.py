@@ -20,8 +20,12 @@
 
 # from .archive_files.svdlora import SVDLoraConfig, SVDLoraModel
 # from .archive_files.svdinitlora_v1 import SVDinitLora_v1_Config, SVDinitLora_v1_Model
-from .svdlora import SVDLora_Config, SVDLora_Model
 # from .archive_files.svdinitlora_v3 import SVDinitLora_v3_Config, SVDinitLora_v3_Model
+from .svdlora import SVDLora_Config, SVDLora_Model
+from .svdlora_res_v1 import SVDLora_res_v1_Config, SVDLora_res_v1_Model
+from .svdlora_res_v2 import SVDLora_res_v2_Config, SVDLora_res_v2_Model
+from .svdlora_res_v3 import SVDLora_res_v3_Config, SVDLora_res_v3_Model
+# from .svdlora_res_v4 import SVDLora_res_v4_Config, SVDLora_res_v4_Model
 from .dora import DoraConfig, DoraModel
 from .lora import LoraConfig, LoraModel
 from .bottleneck import BottleneckConfig, BottleneckModel

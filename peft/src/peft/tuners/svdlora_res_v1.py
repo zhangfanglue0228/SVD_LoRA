@@ -286,6 +286,7 @@ class Linear(nn.Linear, LoraLayer):
         self.lora_A.train(mode)
         self.lora_sigma.train(mode)
         self.lora_B.train(mode)
+        self.coefficient.train(mode)
 
         if not mode and self.merge_weights and not self.merged:
             # Merge the weights and mark it
@@ -309,6 +310,7 @@ class Linear(nn.Linear, LoraLayer):
         self.lora_A.eval()
         self.lora_sigma.eval()
         self.lora_B.eval()
+        self.coefficient.eval()
 
     def forward(self, x: torch.Tensor):
         previous_dtype = self.weight.dtype

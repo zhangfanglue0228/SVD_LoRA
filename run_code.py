@@ -28,8 +28,12 @@ from peft import (  # noqa: E402
     DoraConfig,
     # SVDLoraConfig,
     # SVDinitLora_v1_Config,
-    SVDLora_Config,
     # SVDinitLora_v3_Config,
+    SVDLora_Config,
+    SVDLora_res_v1_Config,
+    SVDLora_res_v2_Config,
+    SVDLora_res_v3_Config,
+    # SVDLora_res_v1_Config,
     BottleneckConfig,
     PrefixTuningConfig,
     get_peft_model,
@@ -288,16 +292,6 @@ elif adapter_name == "dora":
 #         bias="none",
 #         task_type="CAUSAL_LM",
 #     )
-elif adapter_name == "svdlora":
-    print("SVD LoRA init")
-    config = SVDLora_Config(
-        r=lora_r,
-        lora_alpha=lora_alpha,
-        target_modules=target_modules,
-        lora_dropout=lora_dropout,
-        bias="none",
-        task_type="CAUSAL_LM",
-    )
 # elif adapter_name == "svdinitlora_v3":
 #     print("SVD LoRA init")
 #     config = SVDinitLora_v3_Config(
@@ -308,6 +302,46 @@ elif adapter_name == "svdlora":
 #         bias="none",
 #         task_type="CAUSAL_LM",
 #     )
+elif adapter_name == "svdlora":
+    print("SVD LoRA init")
+    config = SVDLora_Config(
+        r=lora_r,
+        lora_alpha=lora_alpha,
+        target_modules=target_modules,
+        lora_dropout=lora_dropout,
+        bias="none",
+        task_type="CAUSAL_LM",
+    )
+elif adapter_name == 'svdlora_res_v1':
+    print("SVD LoRA Residual init")
+    config = SVDLora_res_v1_Config(
+        r=lora_r,
+        lora_alpha=lora_alpha,
+        target_modules=target_modules,
+        lora_dropout=lora_dropout,
+        bias="none",
+        task_type="CAUSAL_LM",
+    )
+elif adapter_name == 'svdlora_res_v2':
+    print("SVD LoRA Residual init")
+    config = SVDLora_res_v2_Config(
+        r=lora_r,
+        lora_alpha=lora_alpha,
+        target_modules=target_modules,
+        lora_dropout=lora_dropout,
+        bias="none",
+        task_type="CAUSAL_LM",
+    )
+elif adapter_name == 'svdlora_res_v3':
+    print("SVD LoRA Residual init")
+    config = SVDLora_res_v3_Config(
+        r=lora_r,
+        lora_alpha=lora_alpha,
+        target_modules=target_modules,
+        lora_dropout=lora_dropout,
+        bias="none",
+        task_type="CAUSAL_LM",
+    )
 elif adapter_name == "bottleneck":
     config = BottleneckConfig(
         bottleneck_size=bottleneck_size,
