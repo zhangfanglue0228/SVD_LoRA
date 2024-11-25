@@ -32,7 +32,8 @@ The difference between the fine-tuned $U \Sigma V$ matrix and the original $U \S
 ## Third Try
 
 1. Add Residual to SVDLoRA
-    1. coefficient = 0 / 1 (sigmoid)
+    1. coefficient = (-∞, +∞)
     2. coefficient = 0 ~ 1
-    3. coefficient = (-∞, +∞)
+    3. coefficient = 0 / 1 (sigmoid)
+    4. $KronA_B^{res}$
 2. SVDDoRA
