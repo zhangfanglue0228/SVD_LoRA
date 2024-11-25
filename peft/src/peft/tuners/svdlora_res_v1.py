@@ -137,7 +137,7 @@ class SVDLora_res_v1_Model(torch.nn.Module):
                             kwargs["fan_in_fan_out"] = self.peft_config.fan_in_fan_out = False
                     new_module = MergedLinear(in_features, out_features, bias=bias, **kwargs)
                 self._replace_module(parent, target_name, new_module, target)
-                print(key, "finished(Model type: SVDLora_Model)")
+                print(key, "finished(Model type: SVDLora_res_v1_Model)")
         if not is_target_modules_in_base_model:
             raise ValueError(
                 f"Target modules {self.peft_config.target_modules} not found in the base model. "
@@ -276,7 +276,7 @@ class Linear(nn.Linear, LoraLayer):
             self.lora_sigma.weight.data.copy_(s.detach())
             self.lora_B.weight.data.copy_(u.detach())
             self.weight_low = transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out)
-            self.weight.data -= self.weight_low
+            # self.weight.data -= self.weight_low
             # self.svd_v.weight.data.copy_(v.detach())
             del copy_weight, u, s, v
             # torch.cuda.empty_cache()
@@ -292,7 +292,7 @@ class Linear(nn.Linear, LoraLayer):
             # Merge the weights and mark it
             # if self.r > 0:
             self.weight.data += (
-                transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out) * self.scaling * self.coefficient
+                (transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out) - self.weight_low) * self.scaling * self.coefficient
             )
             self.merged = True
             print("Merged!")
@@ -300,7 +300,7 @@ class Linear(nn.Linear, LoraLayer):
             # Make sure that the weights are not merged
             # if self.r > 0:
             self.weight.data -= (
-                transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out) * self.scaling * self.coefficient
+                (transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out) - self.weight_low) * self.scaling * self.coefficient
             )
             self.weight.data += self.weight_low
             self.merged = True
@@ -321,9 +321,9 @@ class Linear(nn.Linear, LoraLayer):
         elif self.r > 0 and not self.merged:
             result = F.linear(x, transpose(self.weight, self.fan_in_fan_out), bias=self.bias)
             # if self.r > 0:
-            result += (((self.lora_dropout(x.to(self.lora_A.weight.dtype)) @ self.lora_A.weight.T) @ self.lora_sigma.weight.T) @ self.lora_B.weight.T) * self.scaling * self.coefficient
+            result += ((((self.lora_dropout(x.to(self.lora_A.weight.dtype)) @ self.lora_A.weight.T) @ self.lora_sigma.weight.T) @ self.lora_B.weight.T) - self.weight_low) * self.scaling * self.coefficient
         else:
-            result = F.linear(x, transpose(self.weight, self.fan_in_fan_out), bias=self.bias) * self.coefficient
+            result = F.linear(x, transpose(self.weight, self.fan_in_fan_out), bias=self.bias)
 
         if result.dtype != previous_dtype:
             result = result.to(previous_dtype)
