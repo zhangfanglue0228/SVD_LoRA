@@ -89,8 +89,11 @@ def main(
             args.adapter == "DoRA" or 
             # args.adapter == "SVDLoRA" or 
             # args.adapter == "SVDinitLoRA_v1" or 
-            args.adapter == "SVDLoRA"
             # args.adapter == "SVDinitLoRA_v3"
+            args.adapter == "SVDLoRA_res_v1" or
+            args.adapter == "SVDLoRA_res_v2" or
+            args.adapter == "SVDLoRA_res_v3"
+            # args.adapter == "SVDLoRA_res_v4"
         ):
         print("Merge LoRA/DoRA weights into the original weights")
         key_list = [(key,module) for key, module in model.model.named_modules()]
@@ -221,7 +224,7 @@ def parse_args():
     parser.add_argument('--dataset', choices=["boolq", "piqa", "social_i_qa", "hellaswag", "winogrande", "ARC-Challenge", "ARC-Easy", "openbookqa"],
                         required=True)
     parser.add_argument('--model', choices=['LLaMA-7B', "LLaMA-13B",'LLaMA2-7B','LLaMA3-8B'], required=True)
-    parser.add_argument('--adapter', choices=['LoRA', 'AdapterP', 'AdapterH', 'Parallel', 'DoRA', 'SVDLoRA'], required=True)
+    parser.add_argument('--adapter', choices=['LoRA', 'AdapterP', 'AdapterH', 'Parallel', 'DoRA', 'SVDLoRA', 'SVDLoRA_res_v1', 'SVDLoRA_res_v2', 'SVDLoRA_res_v3', 'SVDLoRA_res_v4'], required=True)
     parser.add_argument('--base_model', required=True)
     parser.add_argument('--lora_weights', required=True)
     parser.add_argument('--batch_size', type=int, required=True)

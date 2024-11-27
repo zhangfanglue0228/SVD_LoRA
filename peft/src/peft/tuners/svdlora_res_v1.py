@@ -312,8 +312,9 @@ class Linear(nn.Linear, LoraLayer):
         if not mode and self.merge_weights and not self.merged:
             # Merge the weights and mark it
             # if self.r > 0:
+            weight_low = self.U_matrix.weight @ self.Sigma_matrix.weight @ self.V_matrix.weight
             self.weight.data += (
-                (transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out) - self.weight_low.weight) * self.scaling * self.coefficient
+                (transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out) - weight_low) * self.scaling * self.coefficient
             )
             self.merged = True
             print("Merged!")
