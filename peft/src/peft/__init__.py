@@ -56,6 +56,8 @@ from .tuners import (
     SVDLora_res_v3_Model,
     # SVDLora_res_v4_Config,
     # SVDLora_res_v4_Model,
+    SVDDora_Config,
+    SVDDora_Model,
     BottleneckConfig,
     BottleneckModel,
     PrefixEncoder,

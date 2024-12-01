@@ -34,6 +34,7 @@ from peft import (  # noqa: E402
     SVDLora_res_v2_Config,
     SVDLora_res_v3_Config,
     # SVDLora_res_v1_Config,
+    SVDDora_Config,
     BottleneckConfig,
     PrefixTuningConfig,
     get_peft_model,
@@ -112,8 +113,8 @@ def generate_and_tokenize_prompt(data_point):
 # model/data params
 base_model: str = "../../models/meta-llama/Meta-Llama-3-8B"  # the only required argument
 data_path: str = "./ft-training_set/commonsense_15k.json"
-output_dir: str = "./outputs/llama3-svdlora_res_v1"
-adapter_name: str = "svdlora_res_v1"
+output_dir: str = "./outputs/test/llama3-svddora"
+adapter_name: str = "svddora"
 load_8bit : bool = False
 # training hyperparams
 batch_size: int = 16
@@ -125,7 +126,7 @@ cutoff_len: int = 256
 val_set_size: int = 120
 use_gradient_checkpointing: bool = True
 eval_step: int = 10
-save_step: int = 100
+save_step: int = 10
 # lora hyperparams
 lora_r: int = 32
 lora_alpha: int = 64
@@ -263,6 +264,18 @@ if adapter_name == "lora":
 elif adapter_name == "dora":
     print("DoRA init")
     config = DoraConfig(
+        r=lora_r,
+        lora_alpha=lora_alpha,
+        target_modules=target_modules,
+        lora_dropout=lora_dropout,
+        bias="none",
+        task_type="CAUSAL_LM",
+        dora_simple=dora_simple,
+        Wdecompose_target_modules=Wdecompose_target_modules
+    )
+elif adapter_name == "svddora":
+    print("SVDDoRA init")
+    config = SVDDora_Config(
         r=lora_r,
         lora_alpha=lora_alpha,
         target_modules=target_modules,
