@@ -8,7 +8,7 @@ CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
 
 CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
     --model LLaMA3-8B \
-    --adapter LoRA \
+    --adapter DoRA \
     --dataset piqa \
     --base_model '../../models/meta-llama/Meta-Llama-3-8B' \
     --batch_size 1 \
@@ -16,7 +16,7 @@ CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
 
 CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
     --model LLaMA3-8B \
-    --adapter LoRA \
+    --adapter DoRA \
     --dataset social_i_qa \
     --base_model '../../models/meta-llama/Meta-Llama-3-8B' \
     --batch_size 1 \
@@ -24,7 +24,7 @@ CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
 
 CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
     --model LLaMA3-8B \
-    --adapter LoRA \
+    --adapter DoRA \
     --dataset hellaswag \
     --base_model '../../models/meta-llama/Meta-Llama-3-8B' \
     --batch_size 1 \
@@ -32,7 +32,7 @@ CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
 
 CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
     --model LLaMA3-8B \
-    --adapter LoRA \
+    --adapter DoRA \
     --dataset winogrande \
     --base_model '../../models/meta-llama/Meta-Llama-3-8B' \
     --batch_size 1 \
@@ -40,7 +40,7 @@ CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
 
 CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
     --model LLaMA3-8B \
-    --adapter LoRA \
+    --adapter DoRA \
     --dataset ARC-Challenge \
     --base_model '../../models/meta-llama/Meta-Llama-3-8B' \
     --batch_size 1 \
@@ -48,7 +48,7 @@ CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
 
 CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
     --model LLaMA3-8B \
-    --adapter LoRA \
+    --adapter DoRA \
     --dataset ARC-Easy \
     --base_model '../../models/meta-llama/Meta-Llama-3-8B' \
     --batch_size 1 \
@@ -56,7 +56,7 @@ CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
 
 CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
     --model LLaMA3-8B \
-    --adapter LoRA \
+    --adapter DoRA \
     --dataset openbookqa \
     --base_model '../../models/meta-llama/Meta-Llama-3-8B' \
     --batch_size 1 \
