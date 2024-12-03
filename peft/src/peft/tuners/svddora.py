@@ -389,7 +389,7 @@ class Linear(nn.Linear, LoraLayer):
             self.lora_sigma.weight.data.copy_(s.detach())
             self.lora_B.weight.data.copy_(u.detach())
             self.weight_low = transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out)
-            self.weight.data -= self.weight_low
+            self.weight.data -= self.weight_low * self.scaling
             # self.svd_v.weight.data.copy_(v.detach())
             del copy_weight, u, s, v, magnitude
             # torch.cuda.empty_cache()
@@ -472,7 +472,7 @@ class Linear(nn.Linear, LoraLayer):
             if not self.bias is None:
                     result += self.bias.view(1, -1).expand_as(result)
 
-            result += ( norm_scale * (self.lora_B(self.lora_A(dropout_x.to(self.lora_A.weight.dtype))))) * self.scaling
+            result += ( norm_scale * (self.lora_B(self.lora_sigma(self.lora_A(dropout_x.to(self.lora_A.weight.dtype)))))) * self.scaling
             
         else:
             # ------------------------------------------

@@ -34,6 +34,7 @@ from peft import (  # noqa: E402
     SVDLora_res_v2_Config,
     SVDLora_res_v3_Config,
     # SVDLora_res_v1_Config,
+    SVDDora_Config,
     BottleneckConfig,
     PrefixTuningConfig,
     get_peft_model,
@@ -238,6 +239,18 @@ def train(
     elif adapter_name == "dora":
         print("DoRA init")
         config = DoraConfig(
+            r=lora_r,
+            lora_alpha=lora_alpha,
+            target_modules=target_modules,
+            lora_dropout=lora_dropout,
+            bias="none",
+            task_type="CAUSAL_LM",
+            dora_simple=dora_simple,
+            Wdecompose_target_modules=Wdecompose_target_modules
+        )
+    elif adapter_name == "svddora":
+        print("SVDDoRA init")
+        config = SVDDora_Config(
             r=lora_r,
             lora_alpha=lora_alpha,
             target_modules=target_modules,
