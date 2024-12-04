@@ -87,7 +87,7 @@ def main(
     if (
             args.adapter == "LoRA" or 
             args.adapter == "DoRA" or 
-            # args.adapter == "SVDLoRA" or 
+            args.adapter == "SVDLoRA" or 
             # args.adapter == "SVDinitLoRA_v1" or 
             # args.adapter == "SVDinitLoRA_v3"
             args.adapter == "SVDLoRA_res_v1" or

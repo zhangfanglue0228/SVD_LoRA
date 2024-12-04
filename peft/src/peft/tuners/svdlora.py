@@ -300,10 +300,9 @@ class Linear(nn.Linear, LoraLayer):
             # Merge the weights and mark it
             # if self.r > 0:
             weight_low = self.svd_U.weight @ self.svd_sigma.weight @ self.svd_V.weight
-            new_weight = (
+            self.weight.data += (
                 (transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out) - weight_low) * self.scaling
             )
-            self.weight.data.copy_(new_weight.detach())
             self.merged = True
             print("Merged!")
         elif self.merge_weights and self.merged:
