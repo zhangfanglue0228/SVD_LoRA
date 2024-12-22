@@ -239,9 +239,9 @@ class SVDDora_Model(torch.nn.Module):
         new_module.weight = old_module.weight
 
         # 
-        # with torch.no_grad():
-        #     magnitude = (torch.linalg.norm(new_module.weight.detach()+new_module.weight_low.to, dim=1)).unsqueeze(1).detach()
-        #     new_module.weight_m_wdecomp.weight.copy_(magnitude)
+        with torch.no_grad():
+            magnitude = (torch.linalg.norm(new_module.weight.detach(), dim=1)).unsqueeze(1).detach()
+            new_module.weight_m_wdecomp.weight.copy_(magnitude)
         
 
         if old_module.bias is not None:
@@ -364,6 +364,11 @@ class Linear(nn.Linear, LoraLayer):
                 self.lora_A = nn.Linear(in_features, r, bias=False)
                 self.lora_sigma = nn.Linear(r, r, bias=False)
                 self.lora_B = nn.Linear(r, out_features, bias=False)
+                
+                self.svd_V = nn.Linear(in_features, r, bias=False)
+                self.svd_sigma = nn.Linear(r, r, bias=False)
+                self.svd_U = nn.Linear(r, out_features, bias=False)
+
                 self.scaling = self.lora_alpha / self.r
                 # Freezing the pre-trained weight matrix
 
@@ -383,15 +388,16 @@ class Linear(nn.Linear, LoraLayer):
                 s = s[:self.r]
                 v = v[:self.r, :]
                 s = torch.diag(s)
-                magnitude = (torch.linalg.norm(copy_weight.data.to(device), dim=1)).unsqueeze(1).detach()
-                self.weight_m_wdecomp.weight.copy_(magnitude)
             self.lora_A.weight.data.copy_(v.detach())
             self.lora_sigma.weight.data.copy_(s.detach())
             self.lora_B.weight.data.copy_(u.detach())
-            self.weight_low = transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out)
-            self.weight.data -= self.weight_low * self.scaling
+
+            self.svd_V.weight.data.copy_(v.detach())
+            self.svd_sigma.weight.data.copy_(s.detach())
+            self.svd_U.weight.data.copy_(u.detach())
+            # self.weight_low = transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out)
             # self.svd_v.weight.data.copy_(v.detach())
-            del copy_weight, u, s, v, magnitude
+            del copy_weight, u, s, v
             # torch.cuda.empty_cache()
 
     def train(self, mode: bool = True):
@@ -411,11 +417,13 @@ class Linear(nn.Linear, LoraLayer):
                 self.weight.data.copy_(weight.detach())
             else:
                 # "else" means train magnitude & direction(LoRA)
-                if self.r > 0:
-                    new_weight_v = self.weight + transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out) * self.scaling
-                    weight = ( self.weight_m_wdecomp.weight / (torch.linalg.norm(new_weight_v,dim=1)).unsqueeze(1)) * new_weight_v
-                    self.weight.data.copy_(weight.detach())
+                # if self.r > 0:
+                    # delta_weight = (self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight) - (self.svd_U.weight @ self.svd_sigma.weight @ self.svd_V.weight)
+                new_weight_v = self.weight + transpose(((self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight) - (self.svd_U.weight @ self.svd_sigma.weight @ self.svd_V.weight)), fan_in_fan_out=self.fan_in_fan_out) * self.scaling
+                weight = ( self.weight_m_wdecomp.weight / (torch.linalg.norm(new_weight_v,dim=1)).unsqueeze(1)) * new_weight_v
+                self.weight.data.copy_(weight.detach())
             self.merged = True
+            print("Merged!")
         elif self.merge_weights and self.merged:
             raise NotImplementedError
 
@@ -456,7 +464,7 @@ class Linear(nn.Linear, LoraLayer):
             # ------------------------------------------
             # finetune magnitude and direction matrix
             # ------------------------------------------
-            new_weight_v = self.weight + (self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight) * self.scaling
+            new_weight_v = self.weight + ((self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight) - (self.svd_U.weight @ self.svd_sigma.weight @ self.svd_V.weight)) * self.scaling
 
             if self.dora_simple:
                 norm_scale = self.weight_m_wdecomp.weight.view(-1) / (torch.linalg.norm(new_weight_v,dim=1)).detach()
