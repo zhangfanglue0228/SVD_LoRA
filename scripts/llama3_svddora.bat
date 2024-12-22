@@ -1,9 +1,4 @@
 @echo off
-
-:: 脚本说明
-:: 在指定的 Conda 环境中运行多个 Python 命令
-
-:: 设置 Conda 环境名称
 set ENV_NAME=dora
 set DES_DIR=outputs/SVDDoRA/commonsense_170k/llama3-svddora
 
@@ -15,7 +10,15 @@ if %ERRORLEVEL% NEQ 0 (
 )
 
 echo begin train
-python finetune.py --base_model ../../models/meta-llama/Meta-Llama-3-8B --data_path ft-training_set/commonsense_170k.json --output_dir %DES_DIR% --batch_size 16  --micro_batch_size 8 --num_epochs 3 --learning_rate 1e-4 --cutoff_len 256 --val_set_size 120 --eval_step 200 --save_step 200  --adapter_name svddora --target_modules ["q_proj","k_proj","v_proj","up_proj","down_proj"] --lora_r 32 --lora_alpha 64 --use_gradient_checkpointing
+python finetune.py ^
+    --base_model ../../models/meta-llama/Meta-Llama-3-8B ^
+    --data_path ft-training_set/commonsense_170k.json ^
+    --output_dir %DES_DIR% ^
+    --batch_size 16  --micro_batch_size 2 --num_epochs 3 ^
+    --learning_rate 5e-5 --cutoff_len 256 --val_set_size 120 ^
+    --eval_step 200 --save_step 200  --adapter_name svddora ^
+    --target_modules ["q_proj","k_proj","v_proj","up_proj","down_proj"] ^
+    --lora_r 32 --lora_alpha 64 --use_gradient_checkpointing
 
 :: 执行第一个 Python 命令
 echo 1st command
