@@ -40,7 +40,7 @@ import multitask_data
 
 from utils import LossMeter, set_global_logging_level
 from dist_utils import reduce_dict
-import wandb
+# import wandb
 
 from vis_encoder import get_vis_encoder
 from transformers.models.t5.modeling_t5 import T5LayerNorm
@@ -59,7 +59,7 @@ _use_apex = False
 
 # Check if Pytorch version >= 1.6 to switch between Native AMP and Apex
 if version.parse(torch.__version__) < version.parse("1.6"):
-    from transormers.file_utils import is_apex_available
+    from transformers.file_utils import is_apex_available
     if is_apex_available():
         from apex import amp
     _use_apex = True
@@ -209,18 +209,18 @@ class Trainer(TrainerBase):
             best_cls_valid = 0
             best_cls_epoch = 0
 
-            wandb.init(project=self.args.project_name)
-            wandb.run.name = self.args.run_name
-            wandb.config.update(self.args)
-            wandb.watch(self.model)
-            wandb.log(
-                {"percent of updated parameters (%)": self.percent_updated_parameters}
-            )
+            # wandb.init(project=self.args.project_name)
+            # wandb.run.name = self.args.run_name
+            # wandb.config.update(self.args)
+            # wandb.watch(self.model)
+            # wandb.log(
+            #     {"percent of updated parameters (%)": self.percent_updated_parameters}
+            # )
 
             src_dir = Path(__file__).resolve().parent
             base_path = str(src_dir.parent)
             src_dir = str(src_dir)
-            wandb.save(os.path.join(src_dir + "/*.py"), base_path=base_path)
+            # wandb.save(os.path.join(src_dir + "/*.py"), base_path=base_path)
 
         if self.args.distributed:
             dist.barrier()
@@ -557,7 +557,7 @@ class Trainer(TrainerBase):
                     log_str += "\nEpoch %d: Top1 %0.2f" % (epoch, valid_score)
                     log_str += "\nEpoch %d: Best %0.2f\n" % (best_cls_epoch, best_cls_valid)
 
-                wandb.log(wandb_log_dict, step=epoch)
+                # wandb.log(wandb_log_dict, step=epoch)
 
                 print(log_str)
 
@@ -577,7 +577,7 @@ class Trainer(TrainerBase):
                 evaluator = vqa_test_loader.evaluator
                 dump_path = os.path.join(self.args.output, 'karpathy_test_predict.json')
                 quesid2ans = self.vqa_predict(vqa_test_loader, dump_path)
-                wandb.save(dump_path, base_path=self.args.output)
+                # wandb.save(dump_path, base_path=self.args.output)
 
                 acc_dict_all = evaluator.evaluate_raw(quesid2ans)
                 acc_dict_answerable = evaluator.evaluate_raw(quesid2ans, is_topk_optimal=True)
@@ -591,7 +591,7 @@ class Trainer(TrainerBase):
                     vqa_submit_test_loader = self.test_loader['vqa_submit']
                     dump_path = os.path.join(self.args.output, 'vqa_submit.json')
                     self.vqa_predict(vqa_submit_test_loader, dump_path=dump_path)
-                    wandb.save(dump_path, base_path=self.args.output)
+                    # wandb.save(dump_path, base_path=self.args.output)
 
             # if 'gqa' in self.args.tasks:
             #     gqa_test_loader = self.test_loader['gqa']
@@ -604,7 +604,7 @@ class Trainer(TrainerBase):
                 nlvr_test_loader = self.test_loader['nlvr']
                 dump_path = os.path.join(self.args.output, 'nlvr_submit.csv')
                 test_score_dict = self.nlvr_evaluate(nlvr_test_loader, dump_path=dump_path)
-                wandb.save(dump_path, base_path=self.args.output)
+                # wandb.save(dump_path, base_path=self.args.output)
                 for score_name, score in test_score_dict.items():
                     wandb_log_dict[f'NLVR/Test/{score_name}'] = score * 100.
             if 'refcoco' in self.args.tasks:
@@ -640,9 +640,9 @@ class Trainer(TrainerBase):
                     log_str += pformat(test_results)
 
             print(log_str)
-            wandb.log(wandb_log_dict, step=self.args.epochs)
+            # wandb.log(wandb_log_dict, step=self.args.epochs)
 
-            wandb.log({'finished': True})
+            # wandb.log({'finished': True})
 
         if self.args.distributed:
             dist.barrier()
