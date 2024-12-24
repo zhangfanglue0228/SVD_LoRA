@@ -272,7 +272,7 @@ def train(
             task_type="CAUSAL_LM",
         )
     elif adapter_name == "svdlora_v2":
-        print("SVD LoRA init")
+        print("SVD LoRA v2 init")
         config = SVDLora_v1_Config(
             r=lora_r,
             lora_alpha=lora_alpha,
