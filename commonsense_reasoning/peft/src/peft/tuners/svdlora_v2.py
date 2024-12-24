@@ -276,7 +276,7 @@ class Linear(nn.Linear, LoraLayer):
             # torch.cuda.empty_cache()
             nn.init.kaiming_uniform_(self.lora_A_1.weight, a=math.sqrt(5))
             nn.init.kaiming_uniform_(self.lora_A_2.weight, a=math.sqrt(5))
-            nn.init.zeros_(self.lora_B_1.weight)
+            nn.init.kaiming_uniform_(self.lora_B_1.weight, a=math.sqrt(5))
             nn.init.zeros_(self.lora_B_2.weight)
 
     def train(self, mode: bool=True):
