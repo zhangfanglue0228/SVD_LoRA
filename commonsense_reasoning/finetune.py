@@ -30,6 +30,7 @@ from peft import (  # noqa: E402
     # SVDinitLora_v1_Config,
     # SVDinitLora_v3_Config,
     SVDLora_Config,
+    SVDLora_v1_Config,
     SVDLora_res_v1_Config,
     SVDLora_res_v2_Config,
     SVDLora_res_v3_Config,
@@ -260,39 +261,19 @@ def train(
             dora_simple=dora_simple,
             Wdecompose_target_modules=Wdecompose_target_modules
         )
-    # elif adapter_name == "svdlora":
-    #     print("SVD LoRA init")
-    #     config = SVDLoraConfig(
-    #         r=lora_r,
-    #         lora_alpha=lora_alpha,
-    #         target_modules=target_modules,
-    #         lora_dropout=lora_dropout,
-    #         bias="none",
-    #         task_type="CAUSAL_LM",
-    #     )
-    # elif adapter_name == "svdinitlora_v1":
-    #     print("SVD LoRA init")
-    #     config = SVDinitLora_v1_Config(
-    #         r=lora_r,
-    #         lora_alpha=lora_alpha,
-    #         target_modules=target_modules,
-    #         lora_dropout=lora_dropout,
-    #         bias="none",
-    #         task_type="CAUSAL_LM",
-    #     )
-    # elif adapter_name == "svdinitlora_v3":
-    #     print("SVD LoRA init")
-    #     config = SVDinitLora_v3_Config(
-    #         r=lora_r,
-    #         lora_alpha=lora_alpha,
-    #         target_modules=target_modules,
-    #         lora_dropout=lora_dropout,
-    #         bias="none",
-    #         task_type="CAUSAL_LM",
-    #     )
     elif adapter_name == "svdlora":
         print("SVD LoRA init")
         config = SVDLora_Config(
+            r=lora_r,
+            lora_alpha=lora_alpha,
+            target_modules=target_modules,
+            lora_dropout=lora_dropout,
+            bias="none",
+            task_type="CAUSAL_LM",
+        )
+    elif adapter_name == "svdlora_v2":
+        print("SVD LoRA init")
+        config = SVDLora_v1_Config(
             r=lora_r,
             lora_alpha=lora_alpha,
             target_modules=target_modules,
