@@ -236,6 +236,7 @@ class PeftModel(PushToHubMixin, torch.nn.Module):
                     # model.peft_config.peft_type == PeftType.SVDinitLORA_v1 or 
                     # model.peft_config.peft_type == PeftType.SVDinitLORA_v3
                     model.peft_config.peft_type == PeftType.SVDLORA or
+                    model.peft_config.peft_type == PeftType.SVDLORA_v2 or
                     model.peft_config.peft_type == PeftType.SVDLORA_res_v1 or
                     model.peft_config.peft_type == PeftType.SVDLORA_res_v2 or
                     model.peft_config.peft_type == PeftType.SVDLORA_res_v3 or

@@ -13,6 +13,7 @@ from transformers.pytorch_utils import Conv1D
 
 from ..utils import PeftConfig, PeftType, transpose
 
+import pdb
 
 def is_bnb_available():
     return importlib.util.find_spec("bitsandbytes") is not None
@@ -293,9 +294,9 @@ class Linear(nn.Linear, LoraLayer):
             self.weight.data += (
                 transpose(
                     (
-                        (self.lora_B_1.weight @ self.lora_A_1.weight) 
-                        * self.svd_sigma.weight
-                        * (self.lora_B_2.weight @ self.lora_A_2.weight)
+                        (self.lora_B_2.weight @ self.lora_A_2.weight) 
+                        * self.svd_sigma.weight.view(-1)
+                        @ (self.lora_B_1.weight @ self.lora_A_1.weight)
                     ),
                     fan_in_fan_out=self.fan_in_fan_out
                 ) * self.scaling
@@ -308,9 +309,9 @@ class Linear(nn.Linear, LoraLayer):
             self.weight.data -= (
                 transpose(
                     (
-                        (self.lora_B_1.weight @ self.lora_A_1.weight) 
-                        * self.svd_sigma.weight
-                        * (self.lora_B_2.weight @ self.lora_A_2.weight)
+                        (self.lora_B_2.weight @ self.lora_A_2.weight) 
+                        * self.svd_sigma.weight.view(-1)
+                        @ (self.lora_B_1.weight @ self.lora_A_1.weight)
                     ),
                     fan_in_fan_out=self.fan_in_fan_out
                 ) * self.scaling
