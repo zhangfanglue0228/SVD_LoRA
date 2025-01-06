@@ -31,6 +31,7 @@ from peft import (  # noqa: E402
     # SVDinitLora_v3_Config,
     SVDLora_Config,
     SVDLora_v2_Config,
+    SVDLora_v3_Config,
     SVDLora_res_v1_Config,
     SVDLora_res_v2_Config,
     SVDLora_res_v3_Config,
@@ -274,6 +275,16 @@ def train(
     elif adapter_name == "svdlora_v2":
         print("SVD LoRA v2 init")
         config = SVDLora_v2_Config(
+            r=lora_r,
+            lora_alpha=lora_alpha,
+            target_modules=target_modules,
+            lora_dropout=lora_dropout,
+            bias="none",
+            task_type="CAUSAL_LM",
+        )
+    elif adapter_name == "svdlora_v3":
+        print("SVD LoRA v2 init")
+        config = SVDLora_v3_Config(
             r=lora_r,
             lora_alpha=lora_alpha,
             target_modules=target_modules,

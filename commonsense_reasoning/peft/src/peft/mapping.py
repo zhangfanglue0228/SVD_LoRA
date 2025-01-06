@@ -41,6 +41,7 @@ from .tuners import (
     # SVDinitLora_v3_Config,
     SVDLora_Config,
     SVDLora_v2_Config,
+    SVDLora_v3_Config,
     SVDLora_res_v1_Config,
     SVDLora_res_v2_Config,
     SVDLora_res_v3_Config,
@@ -69,6 +70,7 @@ PEFT_TYPE_TO_CONFIG_MAPPING = {
     # "SVDinitLORA_v3": SVDinitLora_v3_Config,
     "SVDLORA": SVDLora_Config,
     "SVDLORA_v2": SVDLora_v2_Config,
+    "SVDLORA_v3": SVDLora_v3_Config,
     "SVDLORA_res_v1": SVDLora_res_v1_Config,
     "SVDLORA_res_v2": SVDLora_res_v2_Config,
     "SVDLORA_res_v3": SVDLora_res_v3_Config,
@@ -286,6 +288,9 @@ def get_peft_model(model, peft_config):
         elif peft_config.peft_type == "SVDLORA_v2":
             peft_config = _prepare_svdlora_config(peft_config, model_config)
             return PeftModel(model, peft_config)
+        elif peft_config.peft_type == "SVDLORA_v3":
+            peft_config = _prepare_svdlora_config(peft_config, model_config)
+            return PeftModel(model, peft_config)
         elif "SVDLORA_res" in peft_config.peftype:
             peft_config = _prepare_svdlora_res_config(peft_config, model_config)
             return PeftModel(model, peft_config)
@@ -304,6 +309,8 @@ def get_peft_model(model, peft_config):
         elif peft_config.peft_type == "SVDLORA":
             peft_config = _prepare_svdlora_config(peft_config, model_config)
         elif peft_config.peft_type == "SVDLORA_v2":
+            peft_config = _prepare_svdlora_config(peft_config, model_config)
+        elif peft_config.peft_type == "SVDLORA_v3":
             peft_config = _prepare_svdlora_config(peft_config, model_config)
         elif "SVDLORA_res" in peft_config.peft_type:
             peft_config = _prepare_svdlora_res_config(peft_config, model_config)

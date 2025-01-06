@@ -49,6 +49,7 @@ from .tuners import (
         # SVDinitLora_v3_Model,
         SVDLora_Model,
         SVDLora_v2_Model,
+        SVDLora_v3_Model,
         SVDLora_res_v1_Model,
         SVDLora_res_v2_Model,
         SVDLora_res_v3_Model,
@@ -120,6 +121,8 @@ class PeftModel(PushToHubMixin, torch.nn.Module):
                 self.base_model = SVDLora_Model(peft_config, model)
             elif self.peft_config.peft_type == PeftType.SVDLORA_v2:
                 self.base_model = SVDLora_v2_Model(peft_config, model)
+            elif self.peft_config.peft_type == PeftType.SVDLORA_v3:
+                self.base_model = SVDLora_v3_Model(peft_config, model)
             elif self.peft_config.peft_type == PeftType.SVDLORA_res_v1:
                 self.base_model = SVDLora_res_v1_Model(peft_config, model)
             elif self.peft_config.peft_type == PeftType.SVDLORA_res_v2:
@@ -237,6 +240,7 @@ class PeftModel(PushToHubMixin, torch.nn.Module):
                     # model.peft_config.peft_type == PeftType.SVDinitLORA_v3
                     model.peft_config.peft_type == PeftType.SVDLORA or
                     model.peft_config.peft_type == PeftType.SVDLORA_v2 or
+                    model.peft_config.peft_type == PeftType.SVDLORA_v3 or
                     model.peft_config.peft_type == PeftType.SVDLORA_res_v1 or
                     model.peft_config.peft_type == PeftType.SVDLORA_res_v2 or
                     model.peft_config.peft_type == PeftType.SVDLORA_res_v3 or

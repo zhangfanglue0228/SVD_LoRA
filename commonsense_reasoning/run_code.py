@@ -31,6 +31,7 @@ from peft import (  # noqa: E402
     # SVDinitLora_v3_Config,
     SVDLora_Config,
     SVDLora_v2_Config,
+    SVDLora_v3_Config,
     SVDLora_res_v1_Config,
     SVDLora_res_v2_Config,
     SVDLora_res_v3_Config,
@@ -114,8 +115,8 @@ def generate_and_tokenize_prompt(data_point):
 # model/data params
 base_model: str = "../../../models/meta-llama/Meta-Llama-3-8B"  # the only required argument
 data_path: str = "./ft-training_set/commonsense_15k.json"
-output_dir: str = "./outputs/test/llama3-svdlora_v2"
-adapter_name: str = "svdlora_v2"
+output_dir: str = "./outputs/test/llama3-svdlora_v3"
+adapter_name: str = "svdlora_v3"
 load_8bit : bool = False
 # training hyperparams
 batch_size: int = 16
@@ -299,6 +300,16 @@ elif adapter_name == "svdlora":
 elif adapter_name == "svdlora_v2":
     print("SVD LoRA init")
     config = SVDLora_v2_Config(
+        r=lora_r,
+        lora_alpha=lora_alpha,
+        target_modules=target_modules,
+        lora_dropout=lora_dropout,
+        bias="none",
+        task_type="CAUSAL_LM",
+    )
+elif adapter_name == "svdlora_v3":
+    print("SVD LoRA init")
+    config = SVDLora_v3_Config(
         r=lora_r,
         lora_alpha=lora_alpha,
         target_modules=target_modules,

@@ -23,6 +23,7 @@
 # from .archive_files.svdinitlora_v3 import SVDinitLora_v3_Config, SVDinitLora_v3_Model
 from .svdlora import SVDLora_Config, SVDLora_Model
 from .svdlora_v2 import SVDLora_v2_Config, SVDLora_v2_Model
+from .svdlora_v3 import SVDLora_v3_Config, SVDLora_v3_Model
 from .svdlora_res_v1 import SVDLora_res_v1_Config, SVDLora_res_v1_Model
 from .svdlora_res_v2 import SVDLora_res_v2_Config, SVDLora_res_v2_Model
 from .svdlora_res_v3 import SVDLora_res_v3_Config, SVDLora_res_v3_Model

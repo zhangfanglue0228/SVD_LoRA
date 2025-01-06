@@ -50,6 +50,8 @@ from .tuners import (
     SVDLora_Model,
     SVDLora_v2_Config,
     SVDLora_v2_Model,
+    SVDLora_v3_Config,
+    SVDLora_v3_Model,
     SVDLora_res_v1_Config,
     SVDLora_res_v1_Model,
     SVDLora_res_v2_Config,
