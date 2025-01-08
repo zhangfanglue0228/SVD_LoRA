@@ -153,6 +153,24 @@ class SVDLora_Model(torch.nn.Module):
     def _replace_module(self, parent_module, child_name, new_module, old_module):
         setattr(parent_module, child_name, new_module)
         new_module.weight = old_module.weight
+
+        
+        with torch.no_grad():
+            u, s, v = torch.linalg.svd(new_module.weight.detach().to(dtype=torch.float32), full_matrices=False)
+            u = u[:, :new_module.r]
+            s = s[:new_module.r]
+            v = v[:new_module.r, :]
+            s = torch.diag(s)
+        new_module.lora_A.weight.data.copy_(v.detach())
+        new_module.lora_sigma.weight.data.copy_(s.detach())
+        new_module.lora_B.weight.data.copy_(u.detach())
+        weight_low = transpose(new_module.lora_B.weight @ new_module.lora_sigma.weight @ new_module.lora_A.weight, new_module.fan_in_fan_out) * new_module.scaling
+        new_weight = new_module.weight.data - weight_low.to(new_module.weight.data.device)
+        new_module.weight.data.copy_(new_weight.detach())
+        # self.svd_v.weight.data.copy_(v.detach())
+        del u, s, v
+        # torch.cuda.empty_cache()
+
         if old_module.bias is not None:
             new_module.bias = old_module.bias
         if getattr(old_module, "state", None) is not None:
@@ -262,23 +280,6 @@ class Linear(nn.Linear, LoraLayer):
 
     def reset_parameters(self):
         nn.Linear.reset_parameters(self)
-        if hasattr(self, "lora_A"):
-            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-            with torch.no_grad():
-                copy_weight = self.weight.clone()
-                u, s, v = torch.linalg.svd(copy_weight.data.to(device), full_matrices=False)
-                u = u[:, :self.r]
-                s = s[:self.r]
-                v = v[:self.r, :]
-                s = torch.diag(s)
-            self.lora_A.weight.data.copy_(v.detach())
-            self.lora_sigma.weight.data.copy_(s.detach())
-            self.lora_B.weight.data.copy_(u.detach())
-            self.weight_low = transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out)
-            self.weight.data -= self.weight_low * self.scaling
-            # self.svd_v.weight.data.copy_(v.detach())
-            del copy_weight, u, s, v
-            # torch.cuda.empty_cache()
 
     def train(self, mode: bool=True):
         nn.Linear.train(self, mode)
