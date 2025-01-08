@@ -34,7 +34,7 @@ set TOKENIZERS_PARALLELISM=True
 set PYTHONPATH=%PYTHONPATH%;.\src
 
 python -m torch.distributed.launch ^
-    --nproc_per_node=%1 ^
+    --nproc_per_node=1 ^
     --master_port=26464 ^
     .\VL-T5\src\%task%.py ^
     --distributed --multiGPU ^
