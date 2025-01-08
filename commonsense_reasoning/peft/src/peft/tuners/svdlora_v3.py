@@ -153,6 +153,16 @@ class SVDLora_v3_Model(torch.nn.Module):
     def _replace_module(self, parent_module, child_name, new_module, old_module):
         setattr(parent_module, child_name, new_module)
         new_module.weight = old_module.weight
+
+        with torch.no_grad():
+            u, s, v = torch.linalg.svd(new_module.weight.detach().to(dtype=torch.float32), full_matrices=False)
+            new_module.lora_sigma.weight.copy_(s.unsqueeze(1).detach())
+            new_module.svd_u.weight.copy_(u.detach())
+            new_module.svd_v.weight.copy_(v.detach())
+        # self.svd_v.weight.data.copy_(v.detach())
+        del u, s, v
+        # torch.cuda.empty_cache()
+
         if old_module.bias is not None:
             new_module.bias = old_module.bias
         if getattr(old_module, "state", None) is not None:
@@ -270,16 +280,6 @@ class Linear(nn.Linear, LoraLayer):
     def reset_parameters(self):
         nn.Linear.reset_parameters(self)
         if hasattr(self, "lora_A_1"):
-            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-            with torch.no_grad():
-                copy_weight = self.weight.clone()
-                u, s, v = torch.linalg.svd(copy_weight.data.to(device), full_matrices=False)
-                self.lora_sigma.weight.copy_(s.unsqueeze(1).detach())
-                self.svd_u.weight.copy_(u.detach())
-                self.svd_v.weight.copy_(v.detach())
-            # self.svd_v.weight.data.copy_(v.detach())
-            del copy_weight, u, s, v
-            # torch.cuda.empty_cache()
             nn.init.kaiming_uniform_(self.lora_A_1.weight, a=math.sqrt(5))
             nn.init.kaiming_uniform_(self.lora_A_2.weight, a=math.sqrt(5))
             nn.init.zeros_(self.lora_B_1.weight)
@@ -304,10 +304,10 @@ class Linear(nn.Linear, LoraLayer):
         elif self.merge_weights and self.merged:
             # Make sure that the weights are not merged
             # if self.r > 0:
-            self.weight.data -= (
-                transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out) * self.scaling
-            )
-            self.weight.data += self.weight_low
+            # self.weight.data -= (
+            #     transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out) * self.scaling
+            # )
+            # self.weight.data += self.weight_low
             self.merged = True
 
     def eval(self):
@@ -325,11 +325,17 @@ class Linear(nn.Linear, LoraLayer):
             raise NotImplementedError
         
         elif self.r > 0 and not self.merged:
-            result = F.linear(x.to(self.svd_v.weight.dtype), transpose(self.svd_v.weight, fan_in_fan_out=self.fan_in_fan_out), bias=self.bias)
-            result += ((self.lora_dropout(x.to(self.lora_A_1.weight.dtype)) @ self.lora_A_1.weight.T) @ self.lora_B_1.weight.T) * self.scaling
-            temp_result = result * self.lora_sigma.weight.view(-1)
-            result = F.linear(temp_result, transpose(self.svd_u.weight.T, fan_in_fan_out=self.fan_in_fan_out), bias=self.bias)
+            temp_result = F.linear(x.to(self.svd_v.weight.dtype), transpose(self.svd_v.weight, self.fan_in_fan_out), bias=self.bias)
+            temp_result += ((self.lora_dropout(x.to(self.lora_A_1.weight.dtype)) @ self.lora_A_1.weight.T) @ self.lora_B_1.weight.T) * self.scaling
+            temp_result = temp_result * self.lora_sigma.weight.view(-1)
+            result = F.linear(temp_result, transpose(self.svd_u.weight, self.fan_in_fan_out), bias=self.bias)
             result += ((self.lora_dropout(temp_result.to(self.lora_A_2.weight.dtype)) @ self.lora_A_2.weight.T) @ self.lora_B_2.weight.T) * self.scaling
+
+            # result = F.linear(x.to(self.svd_v.weight.dtype), transpose(self.svd_v.weight, fan_in_fan_out=self.fan_in_fan_out), bias=self.bias)
+            # result += ((self.lora_dropout(x.to(self.lora_A_1.weight.dtype)) @ self.lora_A_1.weight.T) @ self.lora_B_1.weight.T) * self.scaling
+            # temp_result = result * self.lora_sigma.weight.view(-1)
+            # result = F.linear(temp_result, transpose(self.svd_u.weight.T, fan_in_fan_out=self.fan_in_fan_out), bias=self.bias)
+            # result += ((self.lora_dropout(temp_result.to(self.lora_A_2.weight.dtype)) @ self.lora_A_2.weight.T) @ self.lora_B_2.weight.T) * self.scaling
         else:
             result = F.linear(x, transpose(self.weight, self.fan_in_fan_out), bias=self.bias)
 

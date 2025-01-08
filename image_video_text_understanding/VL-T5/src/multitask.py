@@ -986,7 +986,7 @@ def main_worker(gpu, args):
 
     if args.distributed:
         torch.cuda.set_device(args.gpu)
-        dist.init_process_group(backend='nccl')
+        dist.init_process_group(backend='gloo')
 
     print(f"args.feature_type {args.feature_type}")
     # use different type of inputs features

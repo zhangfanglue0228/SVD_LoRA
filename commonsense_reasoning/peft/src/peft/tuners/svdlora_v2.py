@@ -154,6 +154,14 @@ class SVDLora_v2_Model(torch.nn.Module):
     def _replace_module(self, parent_module, child_name, new_module, old_module):
         setattr(parent_module, child_name, new_module)
         new_module.weight = old_module.weight
+
+        with torch.no_grad():
+            s = torch.linalg.svdvals(new_module.weight.detach().to(dtype=torch.float32))
+            new_module.svd_sigma.weight.copy_(s.unsqueeze(1).detach())
+        # self.svd_v.weight.data.copy_(v.detach())
+        del s
+        # torch.cuda.empty_cache()
+
         if old_module.bias is not None:
             new_module.bias = old_module.bias
         if getattr(old_module, "state", None) is not None:
@@ -267,14 +275,6 @@ class Linear(nn.Linear, LoraLayer):
     def reset_parameters(self):
         nn.Linear.reset_parameters(self)
         if hasattr(self, "lora_A_1"):
-            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-            with torch.no_grad():
-                copy_weight = self.weight.clone()
-                s = torch.linalg.svdvals(copy_weight.data.to(device))
-                self.svd_sigma.weight.copy_(s.unsqueeze(1).detach())
-            # self.svd_v.weight.data.copy_(v.detach())
-            del copy_weight, s
-            # torch.cuda.empty_cache()
             nn.init.kaiming_uniform_(self.lora_A_1.weight, a=math.sqrt(5))
             nn.init.kaiming_uniform_(self.lora_A_2.weight, a=math.sqrt(5))
             nn.init.kaiming_uniform_(self.lora_B_1.weight, a=math.sqrt(5))
