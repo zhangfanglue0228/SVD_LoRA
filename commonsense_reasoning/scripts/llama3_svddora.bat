@@ -1,6 +1,6 @@
 @echo off
 set ENV_NAME=dora
-set DES_DIR=outputs/SVDDoRA/commonsense_170k/llama3-svddora_L2
+set DES_DIR=outputs/SVDDoRA/commonsense_170k/32/llama3_L2
 
 :: 激活 Conda 环境
 call conda activate %ENV_NAME%

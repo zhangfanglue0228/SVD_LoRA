@@ -242,6 +242,26 @@ class SVDDora_Model(torch.nn.Module):
         with torch.no_grad():
             magnitude = (torch.linalg.norm(new_module.weight.detach(), dim=1)).unsqueeze(1).detach()
             new_module.weight_m_wdecomp.weight.copy_(magnitude)
+            u, s, v = torch.linalg.svd(new_module.weight.detach().to(dtype=torch.float32), full_matrices=False)
+            u = u[:, :new_module.r]
+            s = s[:new_module.r]
+            v = v[:new_module.r, :]
+            s = torch.diag(s)
+        new_module.lora_A.weight.data.copy_(v.detach())
+        new_module.lora_sigma.weight.data.copy_(s.detach())
+        new_module.lora_B.weight.data.copy_(u.detach())
+
+        new_module.svd_V.weight.data.copy_(v.detach())
+        new_module.svd_sigma.weight.data.copy_(s.detach())
+        new_module.svd_U.weight.data.copy_(u.detach())
+
+
+        # weight_low = transpose(new_module.lora_B.weight @ new_module.lora_sigma.weight @ new_module.lora_A.weight, new_module.fan_in_fan_out) * new_module.scaling
+        # new_weight = new_module.weight.data - weight_low.to(new_module.weight.data.device)
+        # new_module.weight.data.copy_(new_weight.detach())
+        # self.svd_v.weight.data.copy_(v.detach())
+        del u, s, v
+        # torch.cuda.empty_cache()
         
 
         if old_module.bias is not None:
@@ -379,26 +399,6 @@ class Linear(nn.Linear, LoraLayer):
 
     def reset_parameters(self):
         nn.Linear.reset_parameters(self)
-        if hasattr(self, "lora_A"):
-            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-            with torch.no_grad():
-                copy_weight = self.weight.clone()
-                u, s, v = torch.linalg.svd(copy_weight.data.to(device), full_matrices=False)
-                u = u[:, :self.r]
-                s = s[:self.r]
-                v = v[:self.r, :]
-                s = torch.diag(s)
-            self.lora_A.weight.data.copy_(v.detach())
-            self.lora_sigma.weight.data.copy_(s.detach())
-            self.lora_B.weight.data.copy_(u.detach())
-
-            self.svd_V.weight.data.copy_(v.detach())
-            self.svd_sigma.weight.data.copy_(s.detach())
-            self.svd_U.weight.data.copy_(u.detach())
-            # self.weight_low = transpose(self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight, fan_in_fan_out=self.fan_in_fan_out)
-            # self.svd_v.weight.data.copy_(v.detach())
-            del copy_weight, u, s, v
-            # torch.cuda.empty_cache()
 
     def train(self, mode: bool = True):
         nn.Linear.train(self, mode)
@@ -464,7 +464,8 @@ class Linear(nn.Linear, LoraLayer):
             # ------------------------------------------
             # finetune magnitude and direction matrix
             # ------------------------------------------
-            new_weight_v = self.weight + ((self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight) - (self.svd_U.weight @ self.svd_sigma.weight @ self.svd_V.weight)) * self.scaling
+            weight_increment = (self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight) - (self.svd_U.weight @ self.svd_sigma.weight @ self.svd_V.weight)
+            new_weight_v = self.weight + weight_increment * self.scaling
 
             if self.dora_simple:
                 norm_scale = self.weight_m_wdecomp.weight.view(-1) / (torch.linalg.norm(new_weight_v,dim=1)).detach()
@@ -480,7 +481,7 @@ class Linear(nn.Linear, LoraLayer):
             if not self.bias is None:
                     result += self.bias.view(1, -1).expand_as(result)
 
-            result += ( norm_scale * (self.lora_B(self.lora_sigma(self.lora_A(dropout_x.to(self.lora_A.weight.dtype)))))) * self.scaling
+            result += ( norm_scale * (dropout_x.to(self.lora_A.weight.dtype) @ weight_increment.T)) * self.scaling
             
         else:
             # ------------------------------------------
