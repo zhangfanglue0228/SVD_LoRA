@@ -25,7 +25,7 @@ import shutil
 from pprint import pprint
 
 from utils import load_state_dict, LossMeter, set_global_logging_level, FusedOptimizer
-import wandb
+# import wandb
 from pprint import pformat
 from transformers.models.t5.modeling_t5 import T5LayerNorm
 import modeling_bart

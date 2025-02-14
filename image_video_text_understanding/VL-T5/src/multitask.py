@@ -5,6 +5,8 @@
 # and any modifications thereto.  Any use, reproduction, disclosure or
 # distribution of this software and related documentation without an express
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
+import time
+time_str = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time.time()))
 
 from trainer_base import TrainerBase
 import torch.backends.cudnn as cudnn
@@ -560,6 +562,9 @@ class Trainer(TrainerBase):
                 # wandb.log(wandb_log_dict, step=epoch)
 
                 print(log_str)
+                with open(f"results/image/{time_str}.txt", "a") as f:
+                    f.write(f"{log_str}\n")
+                    f.write("------------------------------\n")
 
             if self.args.distributed:
                 dist.barrier()
@@ -1404,6 +1409,13 @@ if __name__ == "__main__":
     args.world_size = ngpus_per_node
     if args.local_rank in [0, -1]:
         print(args)
+        with open(f"results/image/{time_str}.txt", "a") as f:
+            args_dict = vars(args)
+            for key, value in args_dict.items():
+                f.write(f"{key}: {value}\n")
+            f.write("------------------------------\n")
+            f.write("Begin Training\n")
+            f.write("------------------------------\n")
 
         comments = []
         if args.load is not None:

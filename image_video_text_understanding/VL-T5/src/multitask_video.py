@@ -5,6 +5,9 @@
 # and any modifications thereto.  Any use, reproduction, disclosure or
 # distribution of this software and related documentation without an express
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
+import time
+time_str = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time.time()))
+
 from trainer_base import TrainerBase
 import torch.backends.cudnn as cudnn
 import torch.multiprocessing as mp
@@ -195,18 +198,18 @@ class Trainer(TrainerBase):
             #     else:
             #         project_name = "Bart_multitask_video"
 
-            wandb.init(project=self.args.project_name)
-            wandb.run.name = self.args.run_name
-            wandb.config.update(self.args)
-            wandb.watch(self.model)
-            wandb.log(
-                {"percent of updated parameters (%)": self.percent_updated_parameters}
-            )
+            # wandb.init(project=self.args.project_name)
+            # wandb.run.name = self.args.run_name
+            # wandb.config.update(self.args)
+            # wandb.watch(self.model)
+            # wandb.log(
+            #     {"percent of updated parameters (%)": self.percent_updated_parameters}
+            # )
 
             src_dir = Path(__file__).resolve().parent
             base_path = str(src_dir.parent)
             src_dir = str(src_dir)
-            wandb.save(os.path.join(src_dir + "/*.py"), base_path=base_path)
+            # wandb.save(os.path.join(src_dir + "/*.py"), base_path=base_path)
 
         if self.args.distributed:
             dist.barrier()
@@ -235,7 +238,7 @@ class Trainer(TrainerBase):
                 'tvc': 0,
                 'yc2c': 0,
             }
-
+            """
             for step_i, batch in enumerate(self.train_loader):
 
                 # print(f'GPU{self.args.gpu} inside training loop')
@@ -366,7 +369,7 @@ class Trainer(TrainerBase):
 
                 if self.args.distributed:
                     dist.barrier()
-
+            """
             if self.verbose:
                 pbar.close()
                 # self.save("Epoch%02d" % (epoch + 1))
@@ -374,7 +377,7 @@ class Trainer(TrainerBase):
             if self.verbose:
                 # Validation
                 log_str = ''
-                wandb_log_dict = {}
+                # wandb_log_dict = {}
 
                 if 'tvqa' in self.args.tasks:
                     # TVQA
@@ -388,7 +391,7 @@ class Trainer(TrainerBase):
                     log_str += f"TVQA"
                     log_str += "\nEpoch %d: Valid Raw %0.2f" % (epoch, valid_score)
                     log_str += "\nEpoch %d: Best Raw %0.2f\n" % (best_tvqa_epoch, best_tvqa_valid)
-                    wandb_log_dict['VQA/Valid/score'] = valid_score
+                    # wandb_log_dict['VQA/Valid/score'] = valid_score
                 if 'how2qa' in self.args.tasks:
                     # How2QA
                     how2qa_val_loader = self.val_loader['how2qa']
@@ -397,7 +400,7 @@ class Trainer(TrainerBase):
                     if valid_score > best_how2qa_valid or epoch == 0:
                         best_how2qa_valid = valid_score
                         best_how2qa_epoch = epoch
-                    wandb_log_dict['How2QA/Valid/Acc'] = valid_score
+                    # wandb_log_dict['How2QA/Valid/Acc'] = valid_score
                     log_str += f"How2QA"
                     log_str += "\nEpoch %d: Valid %0.2f" % (epoch, valid_score)
                     log_str += "\nEpoch %d: Best %0.2f\n" % (best_how2qa_epoch, best_how2qa_valid)
@@ -409,8 +412,8 @@ class Trainer(TrainerBase):
                     if valid_score > best_tvc_valid or epoch == 0:
                         best_tvc_valid = valid_score
                         best_tvc_epoch = epoch
-                    for score_name, score in valid_results.items():
-                        wandb_log_dict[f'TVC/Valid/{score_name}'] = score * 100
+                    # for score_name, score in valid_results.items():
+                    #     wandb_log_dict[f'TVC/Valid/{score_name}'] = score * 100
                     log_str += f"TVC"
                     log_str += "\nEpoch %d: Valid CIDEr %0.2f" % (epoch, valid_score)
                     log_str += "\nEpoch %d: Best %0.2f\n" % (best_tvc_epoch, best_tvc_valid)
@@ -423,16 +426,19 @@ class Trainer(TrainerBase):
                     if valid_score > best_yc2c_valid or epoch == 0:
                         best_yc2c_valid = valid_score
                         best_yc2c_epoch = epoch
-                    for score_name, score in valid_results.items():
-                        wandb_log_dict[f'YC2C/Valid/{score_name}'] = score * 100
+                    # for score_name, score in valid_results.items():
+                    #     wandb_log_dict[f'YC2C/Valid/{score_name}'] = score * 100
                     log_str += f"YC2C"
                     log_str += "\nEpoch %d: Valid CIDEr %0.2f" % (epoch, valid_score)
                     log_str += "\nEpoch %d: Best %0.2f\n" % (best_yc2c_epoch, best_yc2c_valid)
 
 
-                wandb.log(wandb_log_dict, step=epoch)
+                # wandb.log(wandb_log_dict, step=epoch)
 
                 print(log_str)
+                with open(f"results/video/{time_str}.txt", "a") as f:
+                    f.write(f"{log_str}\n")
+                    f.write("------------------------------\n")
 
             if self.args.distributed:
                 dist.barrier()
@@ -537,7 +543,7 @@ class Trainer(TrainerBase):
                         json.dump(entry, f)
                         f.write('\n')
 
-        wandb.log({'finished': True})
+        # wandb.log({'finished': True})
 
         if self.args.distributed:
             dist.barrier()
@@ -832,6 +838,13 @@ if __name__ == "__main__":
     args.world_size = ngpus_per_node
     if args.local_rank in [0, -1]:
         print(args)
+        with open(f"results/video/{time_str}.txt", "a") as f:
+            args_dict = vars(args)
+            for key, value in args_dict.items():
+                f.write(f"{key}: {value}\n")
+            f.write("------------------------------\n")
+            f.write("Begin Training\n")
+            f.write("------------------------------\n")
 
         comments = []
         if args.load is not None:
