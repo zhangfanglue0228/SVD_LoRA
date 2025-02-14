@@ -6,6 +6,7 @@
 # distribution of this software and related documentation without an express
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
+export CUDA_VISIBLE_DEVICES=6
 task=multitask_video
 
 # or bart
@@ -16,12 +17,12 @@ echo $model
 if [ $model == "t5" ]
 then
     folder_prefix="VLT5"
-    backbone="t5-base"
+    backbone="./../../models/google-t5/t5-base"
     batch_size=300
 elif [ $model == "bart" ]
 then
     folder_prefix="VLBart"
-    backbone="facebook/bart-base"
+    backbone="../../../models/facebook/bart-base"
     batch_size=50
 fi
 
@@ -44,8 +45,8 @@ output=snap/${folder_prefix}_${task}/$run_name
 TOKENIZERS_PARALLELISM=True PYTHONPATH=$PYTHONPATH:./src \
 python -m torch.distributed.launch \
     --nproc_per_node=$1 \
-    --master_port=26465 \
-    src/${task}.py \
+    --master_port=26466 \
+    ./VL-T5/src/${task}.py \
     --distributed --multiGPU \
     --optim adamw \
     --warmup_ratio 0.1 \
@@ -73,7 +74,7 @@ python -m torch.distributed.launch \
 python -m torch.distributed.launch \
     --nproc_per_node=$1 \
     --master_port=26465 \
-    src/${task}.py \
+    ./VL-T5/src/${task}.py \
     --distributed --multiGPU \
     --optim adamw \
     --warmup_ratio 0.1 \
