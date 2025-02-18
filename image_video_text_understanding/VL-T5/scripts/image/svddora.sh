@@ -6,7 +6,7 @@
 # distribution of this software and related documentation without an express
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
-export CUDA_VISIBLE_DEVICES=5
+export CUDA_VISIBLE_DEVICES=4
 task=multitask
 
 # or bart
@@ -42,7 +42,7 @@ output=snap/${folder_prefix}_${task}/$run_name
 TOKENIZERS_PARALLELISM=True PYTHONPATH=$PYTHONPATH:./src \
 python -m torch.distributed.launch \
     --nproc_per_node=$1 \
-    --master_port=26465 \
+    --master_port=26468 \
     ./VL-T5/src/${task}.py \
     --distributed --multiGPU \
     --optim adamw \
@@ -57,7 +57,7 @@ python -m torch.distributed.launch \
     --use_tasks_prompts \
     --batch_size ${batch_size} \
     --valid_batch_size ${batch_size} \
-    --use_dora \
+    --use_svddora \
     --unfreeze_bias \
     --unfreeze_layer_norms \
     --lora_settings \
