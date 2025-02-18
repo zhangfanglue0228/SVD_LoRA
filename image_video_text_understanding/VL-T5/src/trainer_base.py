@@ -158,6 +158,147 @@ class DoraLinear(nn.Module):
             self.in_features, self.out_features, self.bias is not None, self.lora.r, self.scaling
         )
 
+class SVDLoraLinear(nn.Module):
+    def __init__(self, m: torch.nn.Linear, lora_r= 1, lora_dropout = 0.0, lora_s = 1.0, device=None, dtype=None):
+        factory_kwargs = {'device': device, 'dtype': dtype}
+        super().__init__()
+        self.in_features = m.in_features
+        self.out_features = m.out_features
+        self.lora_r = lora_r
+        self.scaling = lora_s  ## don't know if this is really needed as tining scaling is essentially the same as tuning learning rate
+        # self.m = m
+        self.weight = nn.Parameter(torch.empty((self.out_features, self.in_features), **factory_kwargs),requires_grad=False)
+
+        self.original_weight_matrix = m.weight.detach()
+        if m.bias is not None:
+            self.bias = nn.Parameter(torch.empty(self.out_features, **factory_kwargs), requires_grad = True)
+        else:
+            self.register_parameter('bias', None)
+
+        
+        ### init weight_m and weight_v and bias
+        with torch.no_grad():
+            u, s, v = torch.linalg.svd(m.weight.detach().to(dtype=torch.float32), full_matrices=False)
+            u = u[:, :lora_r]
+            s = s[:lora_r]
+            v = v[:lora_r, :]
+            s = torch.tensor(s, dtype=m.weight.dtype)
+
+            if m.bias is not None:
+                copy_bias = m.bias.detach()
+                self.bias.copy_(copy_bias)
+
+
+            self.lora = LoRALayer(r=lora_r,lora_alpha=lora_r, lora_dropout=0.1, merge_weights=False)
+            self.lora_A = nn.Parameter(m.weight.new_zeros((self.lora.r, self.in_features)))
+            self.lora_sigma = nn.Parameter(s)
+            self.lora_B = nn.Parameter(m.weight.new_zeros((self.out_features, self.lora.r)))
+
+            self.lora_A.data.copy_(v.detach())
+            # self.lora_sigma.data.copy_(s.detach())
+            self.lora_B.data.copy_(u.detach())
+
+            del u, s, v
+
+            weight_low = (self.lora_B * self.lora_sigma.view(-1) @ self.lora_A) * self.scaling
+
+            new_weight = self.original_weight_matrix - weight_low.to(self.original_weight_matrix.device)
+            self.weight.data.copy_(new_weight.detach())
+
+        self.merged = False
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+
+        weight = self.weight + (self.lora_A.T * self.lora_sigma.view(-1) @ self.lora_B.T).T * self.scaling
+
+        return nn.functional.linear(input, weight, self.bias)
+
+    def extra_repr(self) -> str:
+        return 'in_features={}, out_features={}, bias={}, lora_dim={}, lora_scale={}'.format(
+            self.in_features, self.out_features, self.bias is not None, self.lora_r, self.scaling
+        )
+    
+
+class SVDDoraLinear(nn.Module):
+    def __init__(self, m: torch.nn.Linear, lora_r= 1, lora_dropout = 0.0, lora_s = 1.0, device=None, dtype=None):
+        factory_kwargs = {'device': device, 'dtype': dtype}
+        super().__init__()
+        self.in_features = m.in_features
+        self.out_features = m.out_features
+        self.original_weight_matrix = m.weight.detach()
+        self.weight_m = nn.Parameter(torch.empty((self.out_features, 1), **factory_kwargs),requires_grad=True)
+        self.weight_v = nn.Parameter(torch.empty((self.out_features, self.in_features), **factory_kwargs),requires_grad=False)
+        if m.bias is not None:
+            self.bias = nn.Parameter(torch.empty(self.out_features, **factory_kwargs), requires_grad = True)
+        else:
+            self.register_parameter('bias', None)
+        ### init weight_m and weight_v and bias
+        with torch.no_grad():
+            m = nn.utils.weight_norm(m, dim=0)
+            copy_weight_m = m.weight_g.detach()
+            copy_weight_v = m.weight_v.detach()
+            self.weight_m.copy_(copy_weight_m)
+            self.weight_v.copy_(copy_weight_v)
+            
+            u, s, v = torch.linalg.svd(copy_weight_m, full_matrices=False)
+            u = u[:, :lora_r]
+            s = s[:lora_r]
+            v = v[:lora_r, :]
+            s = torch.tensor(s, dtype=m.weight.dtype)
+
+            if m.bias is not None:
+                copy_bias = m.bias.detach()
+                self.bias.copy_(copy_bias)
+
+
+            self.lora = LoRALayer(r=lora_r,lora_alpha=lora_r, lora_dropout=0.1, merge_weights=False)
+            self.lora_A = nn.Parameter(m.weight.new_zeros((self.lora.r, self.in_features)))
+            self.lora_sigma = nn.Parameter(s)
+            self.lora_B = nn.Parameter(m.weight.new_zeros((self.out_features, self.lora.r)))
+
+            self.svd_V = nn.Linear(self.in_features, self.lora.r, bias=False, device=self.lora_A.device)
+            self.svd_sigma = nn.Linear(1, self.lora.r, bias=False, device=self.lora_A.device)
+            self.svd_U = nn.Linear(self.lora.r, self.out_features, bias=False, device=self.lora_A.device)
+
+            # self.svd_V = nn.Parameter(m.weight.new_zeros((self.lora.r, self.in_features)))
+            # self.svd_sigma = nn.Parameter(s)
+            # self.svd_U = nn.Parameter(m.weight.new_zeros((self.out_features, self.lora.r)))
+
+            self.lora_A.data.copy_(v.detach())
+            # self.svd_V.data.copy_(v.detach())
+            self.lora_B.data.copy_(u.detach())
+            # self.svd_U.data.copy_(v.detach())
+
+            self.svd_V.weight.data.copy_(v.detach())
+            self.svd_sigma.weight.data.copy_(s.unsqueeze(1).detach())
+            self.svd_U.weight.data.copy_(u.detach())
+
+            print(u.device, copy_weight_m.device, self.svd_V.weight.device)
+
+            del u, s, v
+
+
+        self.lora = LoRALayer(r=lora_r,lora_alpha=lora_r, lora_dropout=0.1,merge_weights=False)
+        self.lora_A = nn.Parameter(m.weight.new_zeros((self.lora.r, self.in_features)))
+        self.lora_B = nn.Parameter(m.weight.new_zeros((self.out_features, self.lora.r)))
+        self.scaling = lora_s  ## don't know if this is really needed as tining scaling is essentially the same as tuning learning rate
+
+        self.merged = False
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+
+        # new_weight_v = self.weight_v + ((self.lora_A.T * self.lora_sigma.view(-1) @ self.lora_B.T) - (self.svd_V.T * self.svd_sigma.view(-1) @ self.svd_U.T)).T * self.scaling
+        new_weight_v = self.weight_v + ((self.lora_A.T * self.lora_sigma.view(-1) @ self.lora_B.T) - (self.svd_V.weight.T * self.svd_sigma.weight.view(-1) @ self.svd_U.weight.T)).T * self.scaling
+        weight = ( self.weight_m / (torch.linalg.norm(new_weight_v,dim=1)).unsqueeze(1)) * (self.weight_v + (((self.lora_A.T * self.lora_sigma.view(-1) @ self.lora_B.T) - (self.svd_V.weight.T * self.svd_sigma.weight.view(-1) @ self.svd_U.weight.T))).T * self.scaling)
+
+        return nn.functional.linear(input, weight, self.bias)
+
+    def extra_repr(self) -> str:
+        return 'in_features={}, out_features={}, bias={}, lora_dim={}, lora_scale={}'.format(
+            self.in_features, self.out_features, self.bias is not None, self.lora.r, self.scaling
+        )
+
+
 class TrainerBase(object):
     def __init__(self, args, train_loader=None, val_loader=None, test_loader=None, train=True):
         self.args = args
@@ -408,11 +549,15 @@ class TrainerBase(object):
                     print(f"{n} is trainable...")
 
         if self.args.use_lora:
-            targets = ["lora", "bias"]
+            # targets = ["lora", "bias"]
+            lora_targets = ["layers"]
+            lora_lora_target = ["v_proj", "q_proj"]
             for n, p in self.model.named_parameters():
-                if any(t in n for t in targets):
-                    p.requires_grad = True
-                    print(f"{n} is trainable...")
+                # if any(t in n for t in targets):
+                if any(t in n for t in lora_targets) and isinstance(p,nn.Linear):
+                    if any(t in n for t in lora_lora_target):
+                        p.requires_grad = True
+                        print(f"{n} is trainable...")
 
         if self.args.use_dora:
             print("apply dora tuning")
@@ -444,6 +589,76 @@ class TrainerBase(object):
                             setattr(father_module,n[idx+1:],replace_m)
                             replace_m.weight_m.requires_grad = True
                             replace_m.weight_v.requires_grad = False
+                            replace_m.bias.requires_grad = True
+                            del p
+        
+        if self.args.use_svdlora:
+            print("apply svdlora tuning")
+
+            if self.args.lora_settings:
+                dora_targets = ["layers"]
+                dora_lora_target = ["v_proj", "q_proj"]
+                it=[(name,m) for name,m in self.model.named_modules()]
+                module_dict={}
+                for n, p in it:
+                    module_dict[n]=p
+                    idx=n.rfind('.')
+                    if idx==-1:
+                        idx=0
+                    father_name=n[:idx]
+                    if father_name in module_dict:
+                        father_module=module_dict[father_name]
+                    else:
+                        raise RuntimeError(f"father module {father_name} not found")
+                    
+                    if any(t in n for t in dora_targets) and isinstance(p,nn.Linear):
+                        if any(t in n for t in dora_lora_target):
+                            
+                            if self.args.dora_simple:
+                                print("apply dora simple instead")
+                                replace_m = DoraLinear_simple(m = p, lora_r= self.args.lora_dim, lora_dropout= 0.0, device=self.model.device)
+                            else:
+                                replace_m = SVDLoraLinear(m = p, lora_r= self.args.lora_dim, lora_dropout= 0.0, device=self.model.device)
+                            setattr(father_module,n[idx+1:],replace_m)
+                            replace_m.weight.requires_grad = False
+                            # replace_m.weight_m.requires_grad = True
+                            # replace_m.weight_v.requires_grad = False
+                            replace_m.bias.requires_grad = True
+                            del p
+        
+        if self.args.use_svddora:
+            print("apply svddora tuning")
+
+            if self.args.lora_settings:
+                dora_targets = ["layers"]
+                dora_lora_target = ["v_proj", "q_proj"]
+                it=[(name,m) for name,m in self.model.named_modules()]
+                module_dict={}
+                for n, p in it:
+                    module_dict[n]=p
+                    idx=n.rfind('.')
+                    if idx==-1:
+                        idx=0
+                    father_name=n[:idx]
+                    if father_name in module_dict:
+                        father_module=module_dict[father_name]
+                    else:
+                        raise RuntimeError(f"father module {father_name} not found")
+                    
+                    if any(t in n for t in dora_targets) and isinstance(p,nn.Linear):
+                        if any(t in n for t in dora_lora_target):
+                            
+                            if self.args.dora_simple:
+                                print("apply dora simple instead")
+                                replace_m = DoraLinear_simple(m = p, lora_r= self.args.lora_dim, lora_dropout= 0.0, device=self.model.device)
+                            else:
+                                replace_m = SVDDoraLinear(m = p, lora_r= self.args.lora_dim, lora_dropout= 0.0, device=self.model.device)
+                            setattr(father_module,n[idx+1:],replace_m)
+                            replace_m.weight_m.requires_grad = True
+                            replace_m.weight_v.requires_grad = False
+                            replace_m.svd_U.weight.requires_grad = False
+                            replace_m.svd_sigma.weight.requires_grad = False
+                            replace_m.svd_V.weight.requires_grad = False
                             replace_m.bias.requires_grad = True
                             del p
 

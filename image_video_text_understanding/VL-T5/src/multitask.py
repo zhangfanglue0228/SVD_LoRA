@@ -432,7 +432,7 @@ class Trainer(TrainerBase):
             if self.verbose:
                 # Validation
                 log_str = ''
-                wandb_log_dict = {}
+                # wandb_log_dict = {}
 
                 if 'vqa' in self.args.tasks:
                     # VQA
@@ -447,8 +447,8 @@ class Trainer(TrainerBase):
                     log_str += f"VQA"
                     log_str += "\nEpoch %d: Valid Raw %0.2f Topk %0.2f" % (epoch, valid_score_raw, valid_score)
                     log_str += "\nEpoch %d: Best Raw %0.2f\n" % (best_vqa_epoch, best_vqa_valid)
-                    wandb_log_dict['VQA/Valid/score'] = valid_score
-                    wandb_log_dict['VQA/Valid/raw_score'] = score_dict['overall']
+                    # wandb_log_dict['VQA/Valid/score'] = valid_score
+                    # wandb_log_dict['VQA/Valid/raw_score'] = score_dict['overall']
                 if 'gqa' in self.args.tasks:
                     # GQA
                     gqa_val_loader = self.val_loader['gqa']
@@ -456,7 +456,7 @@ class Trainer(TrainerBase):
                     if valid_score > best_gqa_valid or epoch == 0:
                         best_gqa_valid = valid_score
                         best_gqa_epoch = epoch
-                    wandb_log_dict['GQA/Valid/Acc'] = valid_score
+                    # wandb_log_dict['GQA/Valid/Acc'] = valid_score
                     log_str += f"GQA"
                     log_str += "\nEpoch %d: Valid %0.2f" % (epoch, valid_score)
                     log_str += "\nEpoch %d: Best %0.2f\n" % (best_gqa_epoch, best_gqa_valid)
@@ -468,7 +468,7 @@ class Trainer(TrainerBase):
                     if valid_acc > best_nlvr_valid or epoch == 0:
                         best_nlvr_valid = valid_acc
                         best_nlvr_epoch = epoch
-                    wandb_log_dict['NLVR/Valid/Acc'] = valid_acc
+                    # wandb_log_dict['NLVR/Valid/Acc'] = valid_acc
                     log_str += f"NLVR"
                     log_str += "\nEpoch %d: Valid %0.2f" % (epoch, valid_acc)
                     log_str += "\nEpoch %d: Best %0.2f\n" % (best_nlvr_epoch, best_nlvr_valid)
@@ -484,9 +484,9 @@ class Trainer(TrainerBase):
                     if valid_Q_AR > best_valid_Q_AR or epoch == 0:
                         best_valid_Q_AR = valid_Q_AR
                         best_vcr_epoch = epoch
-                    wandb_log_dict['VCR/Valid/Q_A'] = valid_Q_A
-                    wandb_log_dict['VCR/Valid/QA_R'] = valid_QA_R
-                    wandb_log_dict['VCR/Valid/Q_AR'] = valid_Q_AR
+                    # wandb_log_dict['VCR/Valid/Q_A'] = valid_Q_A
+                    # wandb_log_dict['VCR/Valid/QA_R'] = valid_QA_R
+                    # wandb_log_dict['VCR/Valid/Q_AR'] = valid_Q_AR
                     log_str += f"VCR"
                     log_str += "\nEpoch %d: Valid %0.2f" % (epoch, valid_Q_AR)
                     log_str += "\nEpoch %d: Best %0.2f\n" % (best_vcr_epoch, best_valid_Q_AR)
@@ -505,9 +505,9 @@ class Trainer(TrainerBase):
                     if valid_acc > best_refcoco_valid or epoch == 0:
                         best_refcoco_valid = valid_acc
                         best_refcoco_epoch = epoch
-                    if self.args.log_train_accuracy:
-                        wandb_log_dict['RefCOCO/Train/Acc'] = train_acc
-                    wandb_log_dict['RefCOCO/Valid/Acc'] = valid_acc
+                    # if self.args.log_train_accuracy:
+                    #     wandb_log_dict['RefCOCO/Train/Acc'] = train_acc
+                    # wandb_log_dict['RefCOCO/Valid/Acc'] = valid_acc
                     log_str += f"RefCOCOg"
                     if self.args.log_train_accuracy:
                         log_str += f"\nEpoch {epoch}: Train"
@@ -526,8 +526,8 @@ class Trainer(TrainerBase):
                     if valid_score > best_caption_valid or epoch == 0:
                         best_caption_valid = valid_score
                         best_caption_epoch = epoch
-                    for score_name, score in valid_results.items():
-                        wandb_log_dict[f'Caption/Valid/{score_name}'] = score * 100
+                    # for score_name, score in valid_results.items():
+                    #     wandb_log_dict[f'Caption/Valid/{score_name}'] = score * 100
                     log_str += f"COCO Caption"
                     log_str += "\nEpoch %d: Valid CIDEr %0.2f" % (epoch, valid_score)
                     log_str += "\nEpoch %d: Best %0.2f\n" % (best_caption_epoch, best_caption_valid)
@@ -540,8 +540,8 @@ class Trainer(TrainerBase):
                     if valid_score > best_mmt_valid:
                         best_mmt_valid = valid_score
                         best_mmt_epoch = epoch
-                    for score_name, score in valid_results.items():
-                        wandb_log_dict[f'MMT/Valid/{score_name}'] = score
+                    # for score_name, score in valid_results.items():
+                    #     wandb_log_dict[f'MMT/Valid/{score_name}'] = score
                     log_str += f"Multi30K En-De"
                     log_str += "\nEpoch %d: Valid BLEU %0.2f" % (epoch, valid_score)
                     log_str += "\nEpoch %d: Best %0.2f\n" % (best_mmt_epoch, best_mmt_valid)
@@ -553,8 +553,8 @@ class Trainer(TrainerBase):
                     if valid_score > best_cls_valid:
                         best_cls_valid = valid_score
                         best_cls_epoch = epoch
-                    for score_name, score in valid_results.items():
-                        wandb_log_dict[f'CLS/Valid/{score_name}'] = score
+                    # for score_name, score in valid_results.items():
+                    #     wandb_log_dict[f'CLS/Valid/{score_name}'] = score
                     log_str += f"TinyImagenet"
                     log_str += "\nEpoch %d: Top1 %0.2f" % (epoch, valid_score)
                     log_str += "\nEpoch %d: Best %0.2f\n" % (best_cls_epoch, best_cls_valid)
@@ -574,7 +574,7 @@ class Trainer(TrainerBase):
             self.save("LAST")
 
             log_str = ''
-            wandb_log_dict = {}
+            # wandb_log_dict = {}
 
             if 'vqa' in self.args.tasks:
                 # VQA
@@ -588,9 +588,9 @@ class Trainer(TrainerBase):
                 acc_dict_answerable = evaluator.evaluate_raw(quesid2ans, is_topk_optimal=True)
                 acc_dict_unanswerable = evaluator.evaluate_raw(quesid2ans, is_topk_optimal=False)
 
-                wandb_log_dict['VQA/Test/overall'] = acc_dict_all['overall']
-                wandb_log_dict['VQA/Test/topk_optimal'] = acc_dict_answerable['overall']
-                wandb_log_dict['VQA/Test/topk_not_optimal'] = acc_dict_unanswerable['overall']
+                # wandb_log_dict['VQA/Test/overall'] = acc_dict_all['overall']
+                # wandb_log_dict['VQA/Test/topk_optimal'] = acc_dict_answerable['overall']
+                # wandb_log_dict['VQA/Test/topk_not_optimal'] = acc_dict_unanswerable['overall']
 
                 if self.test_loader.get("vqa_submit", None):
                     vqa_submit_test_loader = self.test_loader['vqa_submit']
@@ -610,8 +610,8 @@ class Trainer(TrainerBase):
                 dump_path = os.path.join(self.args.output, 'nlvr_submit.csv')
                 test_score_dict = self.nlvr_evaluate(nlvr_test_loader, dump_path=dump_path)
                 # wandb.save(dump_path, base_path=self.args.output)
-                for score_name, score in test_score_dict.items():
-                    wandb_log_dict[f'NLVR/Test/{score_name}'] = score * 100.
+                # for score_name, score in test_score_dict.items():
+                #     wandb_log_dict[f'NLVR/Test/{score_name}'] = score * 100.
             if 'refcoco' in self.args.tasks:
                 # RefCOCO
                 refcoco_test_loader = self.test_loader['refcoco']
@@ -619,7 +619,7 @@ class Trainer(TrainerBase):
                 test_acc = test_score_dict['n_correct'] / test_score_dict['n_total'] * 100
                 test_n_correct = int(test_score_dict['n_correct'])
                 test_n_total = int(test_score_dict['n_total'])
-                wandb_log_dict['RefCOCO/test/Acc'] = test_acc
+                # wandb_log_dict['RefCOCO/test/Acc'] = test_acc
                 log_str = 'RefCOCOg'
                 log_str += f"\nTest Acc {test_acc:.2f}%"
                 log_str += f"\nTest # correct {test_n_correct} # total {test_n_total}"
@@ -627,8 +627,8 @@ class Trainer(TrainerBase):
                 # COCO Caption
                 caption_test_loader = self.test_loader['caption']
                 test_results = self.caption_evaluate(caption_test_loader)
-                for score_name, score in test_results.items():
-                    wandb_log_dict[f'Caption/Test/{score_name}'] = score
+                # for score_name, score in test_results.items():
+                #     wandb_log_dict[f'Caption/Test/{score_name}'] = score
 
             if 'mmt' in self.args.tasks:
                 # MMT
@@ -639,11 +639,17 @@ class Trainer(TrainerBase):
                     split = loader.dataset.source
                     dump_path = os.path.join(self.args.output, f'submit_{split}_raw.txt')
                     test_results = self.mmt_evaluate(loader, dump_path=dump_path)
-                    for score_name, score in test_results.items():
-                        wandb_log_dict[f'MMT/{split}/{score_name}'] = score
+                    # for score_name, score in test_results.items():
+                    #     wandb_log_dict[f'MMT/{split}/{score_name}'] = score
                     log_str += f'{split} set results\n'
                     log_str += pformat(test_results)
 
+            with open(f"results/image/{time_str}.txt", "a") as f:
+                    f.write("------------------------------\n")
+                    f.write("Test")
+                    f.write("------------------------------\n")
+                    f.write(f"{log_str}\n")
+                    f.write("------------------------------\n")
             print(log_str)
             # wandb.log(wandb_log_dict, step=self.args.epochs)
 
@@ -991,7 +997,7 @@ def main_worker(gpu, args):
 
     if args.distributed:
         torch.cuda.set_device(args.gpu)
-        dist.init_process_group(backend='gloo')
+        dist.init_process_group(backend='nccl')
 
     print(f"args.feature_type {args.feature_type}")
     # use different type of inputs features

@@ -238,7 +238,7 @@ class Trainer(TrainerBase):
                 'tvc': 0,
                 'yc2c': 0,
             }
-            """
+            
             for step_i, batch in enumerate(self.train_loader):
 
                 # print(f'GPU{self.args.gpu} inside training loop')
@@ -369,7 +369,7 @@ class Trainer(TrainerBase):
 
                 if self.args.distributed:
                     dist.barrier()
-            """
+            
             if self.verbose:
                 pbar.close()
                 # self.save("Epoch%02d" % (epoch + 1))
