@@ -57,7 +57,7 @@ python -m torch.distributed.launch \
     --backbone ${backbone} \
     --output $output ${@:2} \
     --num_beams 5 \
-    --use_dora \
+    --use_svdlora \
     --unfreeze_bias \
     --lora_settings \
     --lora_dim ${lora_dim} \
@@ -85,7 +85,7 @@ python -m torch.distributed.launch \
     --backbone ${backbone} \
     --output $output ${@:2} \
     --num_beams 5 \
-    --use_dora \
+    --use_svdlora \
     --load snap/${folder_prefix}_${task}/$run_name/LAST.pth \
     --unfreeze_bias \
     --lora_settings \
