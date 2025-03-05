@@ -42,7 +42,7 @@ import multitask_data
 
 from utils import LossMeter, set_global_logging_level
 from dist_utils import reduce_dict
-# import wandb
+import wandb
 
 from vis_encoder import get_vis_encoder
 from transformers.models.t5.modeling_t5 import T5LayerNorm
@@ -211,13 +211,13 @@ class Trainer(TrainerBase):
             best_cls_valid = 0
             best_cls_epoch = 0
 
-            # wandb.init(project=self.args.project_name)
-            # wandb.run.name = self.args.run_name
-            # wandb.config.update(self.args)
-            # wandb.watch(self.model)
-            # wandb.log(
-            #     {"percent of updated parameters (%)": self.percent_updated_parameters}
-            # )
+            wandb.init(project=self.args.project_name)
+            wandb.run.name = self.args.run_name
+            wandb.config.update(self.args)
+            wandb.watch(self.model)
+            wandb.log(
+                {"percent of updated parameters (%)": self.percent_updated_parameters}
+            )
 
             src_dir = Path(__file__).resolve().parent
             base_path = str(src_dir.parent)
@@ -308,10 +308,10 @@ class Trainer(TrainerBase):
 
                     loss = loss + self.args.lambda_z * reg_loss
 
-                    # wandb.log(
-                    #     {"Reg loss": reg_loss.item()},
-                    #     step=global_step
-                    # )
+                    wandb.log(
+                        {"Reg loss": reg_loss.item()},
+                        step=global_step
+                    )
 
                 # print(f'GPU{self.args.gpu} after loss')
 
@@ -432,7 +432,7 @@ class Trainer(TrainerBase):
             if self.verbose:
                 # Validation
                 log_str = ''
-                # wandb_log_dict = {}
+                wandb_log_dict = {}
 
                 if 'vqa' in self.args.tasks:
                     # VQA
@@ -447,8 +447,8 @@ class Trainer(TrainerBase):
                     log_str += f"VQA"
                     log_str += "\nEpoch %d: Valid Raw %0.2f Topk %0.2f" % (epoch, valid_score_raw, valid_score)
                     log_str += "\nEpoch %d: Best Raw %0.2f\n" % (best_vqa_epoch, best_vqa_valid)
-                    # wandb_log_dict['VQA/Valid/score'] = valid_score
-                    # wandb_log_dict['VQA/Valid/raw_score'] = score_dict['overall']
+                    wandb_log_dict['VQA/Valid/score'] = valid_score
+                    wandb_log_dict['VQA/Valid/raw_score'] = score_dict['overall']
                 if 'gqa' in self.args.tasks:
                     # GQA
                     gqa_val_loader = self.val_loader['gqa']
@@ -456,7 +456,7 @@ class Trainer(TrainerBase):
                     if valid_score > best_gqa_valid or epoch == 0:
                         best_gqa_valid = valid_score
                         best_gqa_epoch = epoch
-                    # wandb_log_dict['GQA/Valid/Acc'] = valid_score
+                    wandb_log_dict['GQA/Valid/Acc'] = valid_score
                     log_str += f"GQA"
                     log_str += "\nEpoch %d: Valid %0.2f" % (epoch, valid_score)
                     log_str += "\nEpoch %d: Best %0.2f\n" % (best_gqa_epoch, best_gqa_valid)
@@ -468,7 +468,7 @@ class Trainer(TrainerBase):
                     if valid_acc > best_nlvr_valid or epoch == 0:
                         best_nlvr_valid = valid_acc
                         best_nlvr_epoch = epoch
-                    # wandb_log_dict['NLVR/Valid/Acc'] = valid_acc
+                    wandb_log_dict['NLVR/Valid/Acc'] = valid_acc
                     log_str += f"NLVR"
                     log_str += "\nEpoch %d: Valid %0.2f" % (epoch, valid_acc)
                     log_str += "\nEpoch %d: Best %0.2f\n" % (best_nlvr_epoch, best_nlvr_valid)
@@ -484,9 +484,9 @@ class Trainer(TrainerBase):
                     if valid_Q_AR > best_valid_Q_AR or epoch == 0:
                         best_valid_Q_AR = valid_Q_AR
                         best_vcr_epoch = epoch
-                    # wandb_log_dict['VCR/Valid/Q_A'] = valid_Q_A
-                    # wandb_log_dict['VCR/Valid/QA_R'] = valid_QA_R
-                    # wandb_log_dict['VCR/Valid/Q_AR'] = valid_Q_AR
+                    wandb_log_dict['VCR/Valid/Q_A'] = valid_Q_A
+                    wandb_log_dict['VCR/Valid/QA_R'] = valid_QA_R
+                    wandb_log_dict['VCR/Valid/Q_AR'] = valid_Q_AR
                     log_str += f"VCR"
                     log_str += "\nEpoch %d: Valid %0.2f" % (epoch, valid_Q_AR)
                     log_str += "\nEpoch %d: Best %0.2f\n" % (best_vcr_epoch, best_valid_Q_AR)
@@ -505,9 +505,9 @@ class Trainer(TrainerBase):
                     if valid_acc > best_refcoco_valid or epoch == 0:
                         best_refcoco_valid = valid_acc
                         best_refcoco_epoch = epoch
-                    # if self.args.log_train_accuracy:
-                    #     wandb_log_dict['RefCOCO/Train/Acc'] = train_acc
-                    # wandb_log_dict['RefCOCO/Valid/Acc'] = valid_acc
+                    if self.args.log_train_accuracy:
+                        wandb_log_dict['RefCOCO/Train/Acc'] = train_acc
+                    wandb_log_dict['RefCOCO/Valid/Acc'] = valid_acc
                     log_str += f"RefCOCOg"
                     if self.args.log_train_accuracy:
                         log_str += f"\nEpoch {epoch}: Train"
@@ -526,8 +526,8 @@ class Trainer(TrainerBase):
                     if valid_score > best_caption_valid or epoch == 0:
                         best_caption_valid = valid_score
                         best_caption_epoch = epoch
-                    # for score_name, score in valid_results.items():
-                    #     wandb_log_dict[f'Caption/Valid/{score_name}'] = score * 100
+                    for score_name, score in valid_results.items():
+                        wandb_log_dict[f'Caption/Valid/{score_name}'] = score * 100
                     log_str += f"COCO Caption"
                     log_str += "\nEpoch %d: Valid CIDEr %0.2f" % (epoch, valid_score)
                     log_str += "\nEpoch %d: Best %0.2f\n" % (best_caption_epoch, best_caption_valid)
@@ -540,8 +540,8 @@ class Trainer(TrainerBase):
                     if valid_score > best_mmt_valid:
                         best_mmt_valid = valid_score
                         best_mmt_epoch = epoch
-                    # for score_name, score in valid_results.items():
-                    #     wandb_log_dict[f'MMT/Valid/{score_name}'] = score
+                    for score_name, score in valid_results.items():
+                        wandb_log_dict[f'MMT/Valid/{score_name}'] = score
                     log_str += f"Multi30K En-De"
                     log_str += "\nEpoch %d: Valid BLEU %0.2f" % (epoch, valid_score)
                     log_str += "\nEpoch %d: Best %0.2f\n" % (best_mmt_epoch, best_mmt_valid)
@@ -553,13 +553,13 @@ class Trainer(TrainerBase):
                     if valid_score > best_cls_valid:
                         best_cls_valid = valid_score
                         best_cls_epoch = epoch
-                    # for score_name, score in valid_results.items():
-                    #     wandb_log_dict[f'CLS/Valid/{score_name}'] = score
+                    for score_name, score in valid_results.items():
+                        wandb_log_dict[f'CLS/Valid/{score_name}'] = score
                     log_str += f"TinyImagenet"
                     log_str += "\nEpoch %d: Top1 %0.2f" % (epoch, valid_score)
                     log_str += "\nEpoch %d: Best %0.2f\n" % (best_cls_epoch, best_cls_valid)
 
-                # wandb.log(wandb_log_dict, step=epoch)
+                wandb.log(wandb_log_dict, step=epoch)
 
                 print(log_str)
                 with open(f"results/image/{time_str}.txt", "a") as f:
@@ -574,7 +574,7 @@ class Trainer(TrainerBase):
             self.save("LAST")
 
             log_str = ''
-            # wandb_log_dict = {}
+            wandb_log_dict = {}
 
             if 'vqa' in self.args.tasks:
                 # VQA
@@ -582,36 +582,36 @@ class Trainer(TrainerBase):
                 evaluator = vqa_test_loader.evaluator
                 dump_path = os.path.join(self.args.output, 'karpathy_test_predict.json')
                 quesid2ans = self.vqa_predict(vqa_test_loader, dump_path)
-                # wandb.save(dump_path, base_path=self.args.output)
+                wandb.save(dump_path, base_path=self.args.output)
 
                 acc_dict_all = evaluator.evaluate_raw(quesid2ans)
                 acc_dict_answerable = evaluator.evaluate_raw(quesid2ans, is_topk_optimal=True)
                 acc_dict_unanswerable = evaluator.evaluate_raw(quesid2ans, is_topk_optimal=False)
 
-                # wandb_log_dict['VQA/Test/overall'] = acc_dict_all['overall']
-                # wandb_log_dict['VQA/Test/topk_optimal'] = acc_dict_answerable['overall']
-                # wandb_log_dict['VQA/Test/topk_not_optimal'] = acc_dict_unanswerable['overall']
+                wandb_log_dict['VQA/Test/overall'] = acc_dict_all['overall']
+                wandb_log_dict['VQA/Test/topk_optimal'] = acc_dict_answerable['overall']
+                wandb_log_dict['VQA/Test/topk_not_optimal'] = acc_dict_unanswerable['overall']
 
                 if self.test_loader.get("vqa_submit", None):
                     vqa_submit_test_loader = self.test_loader['vqa_submit']
                     dump_path = os.path.join(self.args.output, 'vqa_submit.json')
                     self.vqa_predict(vqa_submit_test_loader, dump_path=dump_path)
-                    # wandb.save(dump_path, base_path=self.args.output)
+                    wandb.save(dump_path, base_path=self.args.output)
 
-            # if 'gqa' in self.args.tasks:
-            #     gqa_test_loader = self.test_loader['gqa']
-            #     dump_path = os.path.join(self.args.output, 'gqa_submit.json')
-            #     self.gqa_predict(gqa_test_loader, dump_path=dump_path)
-            #     wandb.save(dump_path, base_path=self.args.output)
+            if 'gqa' in self.args.tasks:
+                gqa_test_loader = self.test_loader['gqa']
+                dump_path = os.path.join(self.args.output, 'gqa_submit.json')
+                self.gqa_predict(gqa_test_loader, dump_path=dump_path)
+                wandb.save(dump_path, base_path=self.args.output)
 
             if 'nlvr' in self.args.tasks:
                 # NLVR
                 nlvr_test_loader = self.test_loader['nlvr']
                 dump_path = os.path.join(self.args.output, 'nlvr_submit.csv')
                 test_score_dict = self.nlvr_evaluate(nlvr_test_loader, dump_path=dump_path)
-                # wandb.save(dump_path, base_path=self.args.output)
-                # for score_name, score in test_score_dict.items():
-                #     wandb_log_dict[f'NLVR/Test/{score_name}'] = score * 100.
+                wandb.save(dump_path, base_path=self.args.output)
+                for score_name, score in test_score_dict.items():
+                    wandb_log_dict[f'NLVR/Test/{score_name}'] = score * 100.
             if 'refcoco' in self.args.tasks:
                 # RefCOCO
                 refcoco_test_loader = self.test_loader['refcoco']
@@ -627,8 +627,8 @@ class Trainer(TrainerBase):
                 # COCO Caption
                 caption_test_loader = self.test_loader['caption']
                 test_results = self.caption_evaluate(caption_test_loader)
-                # for score_name, score in test_results.items():
-                #     wandb_log_dict[f'Caption/Test/{score_name}'] = score
+                for score_name, score in test_results.items():
+                    wandb_log_dict[f'Caption/Test/{score_name}'] = score
 
             if 'mmt' in self.args.tasks:
                 # MMT
@@ -639,21 +639,21 @@ class Trainer(TrainerBase):
                     split = loader.dataset.source
                     dump_path = os.path.join(self.args.output, f'submit_{split}_raw.txt')
                     test_results = self.mmt_evaluate(loader, dump_path=dump_path)
-                    # for score_name, score in test_results.items():
-                    #     wandb_log_dict[f'MMT/{split}/{score_name}'] = score
+                    for score_name, score in test_results.items():
+                        wandb_log_dict[f'MMT/{split}/{score_name}'] = score
                     log_str += f'{split} set results\n'
                     log_str += pformat(test_results)
 
             with open(f"results/image/{time_str}.txt", "a") as f:
                     f.write("------------------------------\n")
-                    f.write("Test")
+                    f.write("Test\n")
                     f.write("------------------------------\n")
                     f.write(f"{log_str}\n")
                     f.write("------------------------------\n")
             print(log_str)
-            # wandb.log(wandb_log_dict, step=self.args.epochs)
+            wandb.log(wandb_log_dict, step=self.args.epochs)
 
-            # wandb.log({'finished': True})
+            wandb.log({'finished': True})
 
         if self.args.distributed:
             dist.barrier()
