@@ -609,9 +609,13 @@ class Trainer(TrainerBase):
             #     self.gqa_predict(gqa_test_loader, dump_path=dump_path)
             #     wandb.save(dump_path, base_path=self.args.output)
             if 'gqa' in self.args.tasks:
-                gqa_test_loader = self.test_loader['gqa']
+                gqa_test_loader = self.val_loader['gqa']
                 test_score = self.gqa_evaluate(gqa_test_loader) * 100
-                wandb_log_dict['GQA/Test/Acc'] = valid_score
+                wandb_log_dict['GQA/Valid/Acc'] = test_score
+            # if 'gqa' in self.args.tasks:
+            #     gqa_test_loader = self.test_loader['gqa']
+            #     test_score = self.gqa_evaluate(gqa_test_loader) * 100
+            #     wandb_log_dict['GQA/Test/Acc'] = valid_score
 
             if 'nlvr' in self.args.tasks:
                 # NLVR

@@ -182,7 +182,7 @@ class SVDLoraLinear(nn.Module):
             u = u[:, :lora_r]
             s = s[:lora_r]
             v = v[:lora_r, :]
-            s = torch.tensor(s, dtype=m.weight.dtype)
+            s = torch.diag(s)
 
             if m.bias is not None:
                 copy_bias = m.bias.detach()
@@ -191,16 +191,16 @@ class SVDLoraLinear(nn.Module):
 
             self.lora = LoRALayer(r=lora_r,lora_alpha=lora_r, lora_dropout=0.1, merge_weights=False)
             self.lora_A = nn.Parameter(m.weight.new_zeros((self.lora.r, self.in_features)))
-            self.lora_sigma = nn.Parameter(s)
+            self.lora_sigma = nn.Parameter(m.weight.new_zeros((self.lora.r, self.lora.r)))
             self.lora_B = nn.Parameter(m.weight.new_zeros((self.out_features, self.lora.r)))
 
             self.lora_A.data.copy_(v.detach())
-            # self.lora_sigma.data.copy_(s.detach())
+            self.lora_sigma.copy_(s.detach())
             self.lora_B.data.copy_(u.detach())
 
             del u, s, v
 
-            weight_low = (self.lora_B * self.lora_sigma.view(-1) @ self.lora_A) * self.scaling
+            weight_low = (self.lora_B @ self.lora_sigma @ self.lora_A) * self.scaling
 
             new_weight = self.original_weight_matrix - weight_low.to(self.original_weight_matrix.device)
             self.weight.data.copy_(new_weight.detach())
@@ -209,7 +209,7 @@ class SVDLoraLinear(nn.Module):
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
 
-        weight = self.weight + (self.lora_A.T * self.lora_sigma.view(-1) @ self.lora_B.T).T * self.scaling
+        weight = self.weight + (self.lora_A.T @ self.lora_sigma.T @ self.lora_B.T).T * self.scaling
 
         return nn.functional.linear(input, weight, self.bias)
 
