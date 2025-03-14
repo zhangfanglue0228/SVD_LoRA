@@ -6,7 +6,7 @@
 # distribution of this software and related documentation without an express
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
-export CUDA_VISIBLE_DEVICES=4
+export CUDA_VISIBLE_DEVICES=3
 task=multitask
 
 # or bart
@@ -35,14 +35,14 @@ lr=1e-3
 
 lora_dim=128
 
-project_name=${feature}_LMsingle_dora_${lora_dim}_bs${batch_size}_image224_lora_settings
+project_name=${feature}_LMsingle_svdlora_${lora_dim}_bs${batch_size}_image224_lora_settings
 run_name=tune+lr${lr}_plzplz2
 output=snap/${folder_prefix}_${task}/$run_name
 
 TOKENIZERS_PARALLELISM=True PYTHONPATH=$PYTHONPATH:./src \
 python -m torch.distributed.launch \
     --nproc_per_node=$1 \
-    --master_port=26468 \
+    --master_port=26464 \
     ./VL-T5/src/${task}.py \
     --distributed --multiGPU \
     --optim adamw \
@@ -57,7 +57,7 @@ python -m torch.distributed.launch \
     --use_tasks_prompts \
     --batch_size ${batch_size} \
     --valid_batch_size ${batch_size} \
-    --use_svddora \
+    --use_svdlora \
     --unfreeze_bias \
     --unfreeze_layer_norms \
     --lora_settings \

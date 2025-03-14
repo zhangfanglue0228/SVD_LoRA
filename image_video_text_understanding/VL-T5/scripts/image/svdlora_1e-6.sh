@@ -31,18 +31,18 @@ echo $backbone
 
 feature=RN101
 
-lr=1e-3
+lr=1e-6
 
 lora_dim=128
 
-project_name=${feature}_LMsingle_dora_${lora_dim}_bs${batch_size}_image224_lora_settings
+project_name=${feature}_LMsingle_svdlora_${lora_dim}_bs${batch_size}_image224_lora_settings
 run_name=tune+lr${lr}_plzplz2
 output=snap/${folder_prefix}_${task}/$run_name
 
 TOKENIZERS_PARALLELISM=True PYTHONPATH=$PYTHONPATH:./src \
 python -m torch.distributed.launch \
     --nproc_per_node=$1 \
-    --master_port=26465 \
+    --master_port=26464 \
     ./VL-T5/src/${task}.py \
     --distributed --multiGPU \
     --optim adamw \
@@ -57,7 +57,7 @@ python -m torch.distributed.launch \
     --use_tasks_prompts \
     --batch_size ${batch_size} \
     --valid_batch_size ${batch_size} \
-    --use_dora \
+    --use_svdlora \
     --unfreeze_bias \
     --unfreeze_layer_norms \
     --lora_settings \
