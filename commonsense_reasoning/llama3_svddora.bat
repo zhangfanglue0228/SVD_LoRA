@@ -16,7 +16,7 @@ python finetune.py ^
     --output_dir %DES_DIR% ^
     --batch_size 16  --micro_batch_size 2 --num_epochs 3 ^
     --learning_rate 1e-5 --cutoff_len 256 --val_set_size 120 ^
-    --eval_step 200 --save_step 200  --adapter_name svddora ^
+    --eval_step 10 --save_step 10  --adapter_name svddora ^
     --target_modules ["q_proj","k_proj","v_proj","up_proj","down_proj"] ^
     --lora_r 32 --lora_alpha 64 --use_gradient_checkpointing
 
