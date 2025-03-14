@@ -246,13 +246,13 @@ class SVDDora_Model(torch.nn.Module):
             u = u[:, :new_module.r]
             s = s[:new_module.r]
             v = v[:new_module.r, :]
-            s = torch.diag(s)
+            # s = torch.diag(s)
         new_module.lora_A.weight.data.copy_(v.detach())
-        new_module.lora_sigma.weight.data.copy_(s.detach())
+        new_module.lora_sigma.weight.data.copy_(s.unsqueeze(1).detach())
         new_module.lora_B.weight.data.copy_(u.detach())
 
         new_module.svd_V.weight.data.copy_(v.detach())
-        new_module.svd_sigma.weight.data.copy_(s.detach())
+        new_module.svd_sigma.weight.data.copy_(s.unsqueeze(1).detach())
         new_module.svd_U.weight.data.copy_(u.detach())
 
 
@@ -382,11 +382,11 @@ class Linear(nn.Linear, LoraLayer):
         if self.Wdecompose == False:
             if r > 0:
                 self.lora_A = nn.Linear(in_features, r, bias=False)
-                self.lora_sigma = nn.Linear(r, r, bias=False)
+                self.lora_sigma = nn.Linear(1, r, bias=False)
                 self.lora_B = nn.Linear(r, out_features, bias=False)
                 
                 self.svd_V = nn.Linear(in_features, r, bias=False)
-                self.svd_sigma = nn.Linear(r, r, bias=False)
+                self.svd_sigma = nn.Linear(1, r, bias=False)
                 self.svd_U = nn.Linear(r, out_features, bias=False)
 
                 self.scaling = self.lora_alpha / self.r
@@ -419,7 +419,7 @@ class Linear(nn.Linear, LoraLayer):
                 # "else" means train magnitude & direction(LoRA)
                 # if self.r > 0:
                     # delta_weight = (self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight) - (self.svd_U.weight @ self.svd_sigma.weight @ self.svd_V.weight)
-                new_weight_v = self.weight + transpose(((self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight) - (self.svd_U.weight @ self.svd_sigma.weight @ self.svd_V.weight)), fan_in_fan_out=self.fan_in_fan_out) * self.scaling
+                new_weight_v = self.weight + transpose(((self.lora_B.weight * self.lora_sigma.weight.view(-1) @ self.lora_A.weight) - (self.svd_U.weight * self.svd_sigma.weight.view(-1) @ self.svd_V.weight)), fan_in_fan_out=self.fan_in_fan_out) * self.scaling
                 weight = ( self.weight_m_wdecomp.weight / (torch.linalg.norm(new_weight_v,dim=1)).unsqueeze(1)) * new_weight_v
                 self.weight.data.copy_(weight.detach())
             self.merged = True
@@ -464,7 +464,7 @@ class Linear(nn.Linear, LoraLayer):
             # ------------------------------------------
             # finetune magnitude and direction matrix
             # ------------------------------------------
-            weight_increment = (self.lora_B.weight @ self.lora_sigma.weight @ self.lora_A.weight) - (self.svd_U.weight @ self.svd_sigma.weight @ self.svd_V.weight)
+            weight_increment = (self.lora_B.weight * self.lora_sigma.weight.view(-1) @ self.lora_A.weight) - (self.svd_U.weight * self.svd_sigma.weight.view(-1) @ self.svd_V.weight)
             new_weight_v = self.weight + weight_increment * self.scaling
 
             if self.dora_simple:
