@@ -32,6 +32,7 @@ echo $backbone
 feature=RN101
 
 lr=5e-5
+vis_lr=5e-6
 
 lora_dim=128
 
@@ -49,6 +50,7 @@ python -m torch.distributed.launch \
     --warmup_ratio 0.1 \
     --clip_grad_norm 5 \
     --lr ${lr} \
+    --vis_lr ${vis_lr} \
     --epochs 20 \
     --num_workers 4 \
     --backbone ${backbone} \

@@ -8,11 +8,12 @@ CUDA_VISIBLE_DEVICES=$1 python finetune.py \
     --learning_rate 1e-5 --cutoff_len 256 --val_set_size 120\
     --eval_step 200 --save_step 200  --adapter_name svdlora\
     --target_modules '["q_proj","k_proj","v_proj","up_proj","down_proj"]'\
-    --lora_r 16 --lora_alpha 32 --use_gradient_checkpointing
+    --lora_r 32 --lora_alpha 64 --use_gradient_checkpointing\
+    --lambda_reg 1
 
 CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
     --model LLaMA3-8B \
-    --adapter SVDLoRA_v2 \
+    --adapter SVDLoRA \
     --dataset boolq \
     --base_model '../../../models/meta-llama/Meta-Llama-3-8B' \
     --batch_size 1 \
@@ -20,7 +21,7 @@ CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
 
 CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
     --model LLaMA3-8B \
-    --adapter SVDLoRA_v2 \
+    --adapter SVDLoRA \
     --dataset piqa \
     --base_model '../../../models/meta-llama/Meta-Llama-3-8B' \
     --batch_size 1 \
@@ -28,7 +29,7 @@ CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
 
 CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
     --model LLaMA3-8B \
-    --adapter SVDLoRA_v2 \
+    --adapter SVDLoRA \
     --dataset social_i_qa \
     --base_model '../../../models/meta-llama/Meta-Llama-3-8B' \
     --batch_size 1 \
@@ -36,7 +37,7 @@ CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
 
 CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
     --model LLaMA3-8B \
-    --adapter SVDLoRA_v2 \
+    --adapter SVDLoRA \
     --dataset hellaswag \
     --base_model '../../../models/meta-llama/Meta-Llama-3-8B' \
     --batch_size 1 \
@@ -44,7 +45,7 @@ CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
 
 CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
     --model LLaMA3-8B \
-    --adapter SVDLoRA_v2 \
+    --adapter SVDLoRA \
     --dataset winogrande \
     --base_model '../../../models/meta-llama/Meta-Llama-3-8B' \
     --batch_size 1 \
@@ -52,7 +53,7 @@ CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
 
 CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
     --model LLaMA3-8B \
-    --adapter SVDLoRA_v2 \
+    --adapter SVDLoRA \
     --dataset ARC-Challenge \
     --base_model '../../../models/meta-llama/Meta-Llama-3-8B' \
     --batch_size 1 \
@@ -60,7 +61,7 @@ CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
 
 CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
     --model LLaMA3-8B \
-    --adapter SVDLoRA_v2 \
+    --adapter SVDLoRA \
     --dataset ARC-Easy \
     --base_model '../../../models/meta-llama/Meta-Llama-3-8B' \
     --batch_size 1 \
@@ -68,7 +69,7 @@ CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
 
 CUDA_VISIBLE_DEVICES=$1 python commonsense_evaluate.py \
     --model LLaMA3-8B \
-    --adapter SVDLoRA_v2 \
+    --adapter SVDLoRA \
     --dataset openbookqa \
     --base_model '../../../models/meta-llama/Meta-Llama-3-8B' \
     --batch_size 1 \

@@ -6,7 +6,7 @@
 # distribution of this software and related documentation without an express
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
-export CUDA_VISIBLE_DEVICES=6
+export CUDA_VISIBLE_DEVICES=0
 task=multitask
 
 # or bart
@@ -32,6 +32,7 @@ echo $backbone
 feature=RN101
 
 lr=1e-6
+vis_lr=1e-7
 
 lora_dim=128
 
@@ -49,6 +50,7 @@ python -m torch.distributed.launch \
     --warmup_ratio 0.1 \
     --clip_grad_norm 5 \
     --lr ${lr} \
+    --lr ${vis_lr} \
     --epochs 20 \
     --num_workers 4 \
     --backbone ${backbone} \

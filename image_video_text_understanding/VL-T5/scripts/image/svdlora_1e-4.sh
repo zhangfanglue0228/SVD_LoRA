@@ -31,7 +31,7 @@ echo $backbone
 
 feature=RN101
 
-lr=1e-3
+lr=1e-4
 vis_lr=1e-4
 
 lora_dim=128

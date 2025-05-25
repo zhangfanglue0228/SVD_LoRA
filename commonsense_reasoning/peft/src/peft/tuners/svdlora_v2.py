@@ -158,6 +158,7 @@ class SVDLora_v2_Model(torch.nn.Module):
         with torch.no_grad():
             s = torch.linalg.svdvals(new_module.weight.detach().to(dtype=torch.float32))
             new_module.svd_sigma.weight.copy_(s.unsqueeze(1).detach())
+            new_module.sigma_inversion.weight.copy_(s.reciprocal_().unsqueeze(1).detach())
         # self.svd_v.weight.data.copy_(v.detach())
         del s
         # torch.cuda.empty_cache()
@@ -170,7 +171,7 @@ class SVDLora_v2_Model(torch.nn.Module):
 
         # dispatch to correct device
         for name, module in new_module.named_modules():
-            if "lora_" in name or "svd_" in name:
+            if "lora_" in name or "svd_" in name or "sigma" in name:
                 module.to(old_module.weight.device)
 
     def __getattr__(self, name: str):
@@ -266,6 +267,7 @@ class Linear(nn.Linear, LoraLayer):
             self.lora_A_2 = nn.Linear(k, r, bias=False)
             self.lora_B_2 = nn.Linear(r, out_features, bias=False)
             self.svd_sigma = nn.Linear(1, k, bias=False)
+            self.sigma_inversion = nn.Linear(1, k, bias=False)
             self.scaling = self.lora_alpha / self.r
             self.weight.requires_grad = False
         self.reset_parameters()
@@ -291,7 +293,7 @@ class Linear(nn.Linear, LoraLayer):
         if not mode and self.merge_weights and not self.merged:
             # Merge the weights and mark it
             # if self.r > 0:
-            self.weight.data += (
+            self.weight.data = self.weight.data * self.sigma_inversion.weight.view(-1) + (
                 transpose(
                     (
                         (self.lora_B_2.weight @ self.lora_A_2.weight) 
@@ -306,7 +308,7 @@ class Linear(nn.Linear, LoraLayer):
         elif self.merge_weights and self.merged:
             # Make sure that the weights are not merged
             # if self.r > 0:
-            self.weight.data -= (
+            self.weight.data = (self.weight.data - (
                 transpose(
                     (
                         (self.lora_B_2.weight @ self.lora_A_2.weight) 
@@ -314,7 +316,7 @@ class Linear(nn.Linear, LoraLayer):
                         @ (self.lora_B_1.weight @ self.lora_A_1.weight)
                     ),
                     fan_in_fan_out=self.fan_in_fan_out
-                ) * self.scaling
+                ) * self.scaling) / self.sigma_inversion.weight.view(-1)
             )
             self.merged = True
 
@@ -333,7 +335,7 @@ class Linear(nn.Linear, LoraLayer):
             raise NotImplementedError
         
         elif self.r > 0 and not self.merged:
-            result = F.linear(x, transpose(self.weight, self.fan_in_fan_out), bias=self.bias)
+            result = F.linear(x, transpose(self.weight * self.sigma_inversion.weight.view(-1), self.fan_in_fan_out), bias=self.bias)
             # if self.r > 0:
             result += (
                         (((((self.lora_dropout(x.to(self.lora_A_1.weight.dtype)) @ self.lora_A_1.weight.T) @ self.lora_B_1.weight.T) * self.svd_sigma.weight.view(-1)) @ self.lora_A_2.weight.T) @ self.lora_B_2.weight.T)
