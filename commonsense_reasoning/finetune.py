@@ -44,10 +44,12 @@ from peft import (  # noqa: E402
     prepare_model_for_int8_training,
     set_peft_model_state_dict,
 )
+from svdloraTrainer import svdloraTrainer
 from transformers import AutoModelForCausalLM, AutoTokenizer, LlamaTokenizer, AutoModel  # noqa: F402
 
 
 def train(
+        lambda_reg: float = 1,
         # model/data params
         base_model: str = "",  # the only required argument
         data_path: str = "yahma/alpaca-cleaned",
@@ -95,6 +97,7 @@ def train(
 ):
     print(
         f"Finetuning model with params:\n"
+        f"lambda_reg: {lambda_reg}\n"
         f"base_model: {base_model}\n"
         f"data_path: {data_path}\n"
         f"output_dir: {output_dir}\n"
@@ -389,7 +392,9 @@ def train(
         model.is_parallelizable = True
         model.model_parallel = True
     
-    trainer = transformers.Trainer(
+    # trainer = transformers.Trainer(
+    trainer = svdloraTrainer(
+        lambda_reg=lambda_reg,
         model=model,
         train_dataset=train_data,
         eval_dataset=val_data,

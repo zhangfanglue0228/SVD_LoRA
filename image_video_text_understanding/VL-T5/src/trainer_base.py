@@ -164,12 +164,13 @@ class SVDLoraLinear(nn.Module):
         super().__init__()
         self.in_features = m.in_features
         self.out_features = m.out_features
-        self.lora_r = lora_r
-        self.scaling = lora_s  ## don't know if this is really needed as tining scaling is essentially the same as tuning learning rate
-        # self.m = m
-        self.weight = nn.Parameter(torch.empty((self.out_features, self.in_features), **factory_kwargs),requires_grad=False)
-
+        self.weight = nn.Parameter(torch.empty((self.out_features, self.in_features), **factory_kwargs), requires_grad=False)
         self.original_weight_matrix = m.weight.detach()
+        self.lora = LoRALayer(r=lora_r,lora_alpha=lora_r, lora_dropout=0.1, merge_weights=False)
+        self.lora_A = nn.Parameter(m.weight.new_zeros((self.lora.r, self.in_features)), requires_grad=True)
+        self.lora_sigma = nn.Parameter(m.weight.new_zeros((self.lora.r, 1)), requires_grad=True)
+        self.lora_B = nn.Parameter(m.weight.new_zeros((self.out_features, self.lora.r)), requires_grad=True)
+        self.scaling = lora_s  ## don't know if this is really needed as tining scaling is essentially the same as tuning learning rate
         if m.bias is not None:
             self.bias = nn.Parameter(torch.empty(self.out_features, **factory_kwargs), requires_grad = True)
         else:
@@ -179,43 +180,44 @@ class SVDLoraLinear(nn.Module):
         ### init weight_m and weight_v and bias
         with torch.no_grad():
             u, s, v = torch.linalg.svd(m.weight.detach().to(dtype=torch.float32), full_matrices=False)
-            u = u[:, :lora_r]
-            s = s[:lora_r]
-            v = v[:lora_r, :]
-            s = torch.diag(s)
+            u = u[:, :self.lora.r]
+            s = s[:self.lora.r]
+            v = v[:self.lora.r, :]
+            # s = torch.diag(s)
+
+            copy_weight_lora_A = v.detach()
+            copy_weight_lora_sigma = s.unsqueeze(1).detach()
+            copy_weight_lora_B = u.detach()
+
+            # print(self.lora_sigma.shape)
+            # print(copy_weight_lora_sigma.shape)
+
+            self.lora_A.data.copy_(copy_weight_lora_A)
+            self.lora_sigma.copy_(copy_weight_lora_sigma)
+            self.lora_B.data.copy_(copy_weight_lora_B)
+
+            # del u, s, v
 
             if m.bias is not None:
                 copy_bias = m.bias.detach()
                 self.bias.copy_(copy_bias)
 
-
-            self.lora = LoRALayer(r=lora_r,lora_alpha=lora_r, lora_dropout=0.1, merge_weights=False)
-            self.lora_A = nn.Parameter(m.weight.new_zeros((self.lora.r, self.in_features)))
-            self.lora_sigma = nn.Parameter(m.weight.new_zeros((self.lora.r, self.lora.r)))
-            self.lora_B = nn.Parameter(m.weight.new_zeros((self.out_features, self.lora.r)))
-
-            self.lora_A.data.copy_(v.detach())
-            self.lora_sigma.copy_(s.detach())
-            self.lora_B.data.copy_(u.detach())
-
-            del u, s, v
-
-            weight_low = (self.lora_B @ self.lora_sigma @ self.lora_A) * self.scaling
+            weight_low = (self.lora_B * self.lora_sigma.view(-1) @ self.lora_A) * self.scaling
 
             new_weight = self.original_weight_matrix - weight_low.to(self.original_weight_matrix.device)
             self.weight.data.copy_(new_weight.detach())
-
+        
         self.merged = False
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
 
-        weight = self.weight + (self.lora_A.T @ self.lora_sigma.T @ self.lora_B.T).T * self.scaling
+        weight = self.weight + (self.lora_A.T * self.lora_sigma.view(-1) @ self.lora_B.T).T * self.scaling
 
         return nn.functional.linear(input, weight, self.bias)
 
     def extra_repr(self) -> str:
         return 'in_features={}, out_features={}, bias={}, lora_dim={}, lora_scale={}'.format(
-            self.in_features, self.out_features, self.bias is not None, self.lora_r, self.scaling
+            self.in_features, self.out_features, self.bias is not None, self.lora.r, self.scaling
         )
     
 
@@ -623,6 +625,9 @@ class TrainerBase(object):
                             replace_m.weight.requires_grad = False
                             # replace_m.weight_m.requires_grad = True
                             # replace_m.weight_v.requires_grad = False
+                            replace_m.lora_A.requires_grad = True
+                            replace_m.lora_sigma.requires_grad = True
+                            replace_m.lora_B.requires_grad = True
                             replace_m.bias.requires_grad = True
                             del p
         

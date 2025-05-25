@@ -281,6 +281,8 @@ def parse_args(parse=True, **optional_kwargs):
     parser.add_argument('--comment', type=str, default='')
     parser.add_argument("--dry", action='store_true')
 
+    parser.add_argument("--lambda_reg", type=float, default=1.0)
+
     # Parse the arguments.
     if parse:
         args = parser.parse_args()

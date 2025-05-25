@@ -134,6 +134,7 @@ def main(
     total = len(batches)
     correct = 0
     current = 0
+    miss = 0.001
     output_data = []
     pbar = tqdm(total=total)
     for idx, batch in enumerate(batches):
@@ -145,10 +146,18 @@ def main(
         for data, output in zip(batch, outputs):
             label = data.get('answer')
             flag = False
-            predict = extract_answer(args, output)
-            if label == predict:
-                correct += 1
-                flag = True
+            if args.dataset.lower() in ['aqua']:
+                predict = extract_answer_letter(args, output)
+                if label == predict:
+                    correct += 1
+                    flag = True
+            else:
+                if isinstance(label, str):
+                    label = float(label)
+                predict = extract_answer_number(args, output)
+                if abs(label - predict) <= miss:
+                    correct += 1
+                    flag = True
             new_data = copy.deepcopy(data)
             new_data['output_pred'] = output
             new_data['pred'] = predict
@@ -223,7 +232,7 @@ def create_batch(dataset, batch_size):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', choices=["boolq", "piqa", "social_i_qa", "hellaswag", "winogrande", "ARC-Challenge", "ARC-Easy", "openbookqa", "AddSub", "AQuA", "gsm8k", "MultiArith", "SingleEq", "SVAMP"],
+    parser.add_argument('--dataset', choices=["boolq", "piqa", "social_i_qa", "hellaswag", "winogrande", "ARC-Challenge", "ARC-Easy", "openbookqa", "aqua", "multiarith", "addsub", "singleeq", "gsm8k", "svamp"],
                         required=True)
     parser.add_argument('--model', choices=['LLaMA-7B', "LLaMA-13B",'LLaMA2-7B','LLaMA3-8B'], required=True)
     parser.add_argument('--adapter', choices=['LoRA', 'AdapterP', 'AdapterH', 'Parallel', 'DoRA', 'SVDDoRA', 'SVDLoRA', 'SVDLoRA_v2', 'SVDLoRA_v3', 'SVDLoRA_res_v1', 'SVDLoRA_res_v2', 'SVDLoRA_res_v3', 'SVDLoRA_res_v4'], required=True)
@@ -353,6 +362,35 @@ def extract_answer(args, sentence: str) -> float:
         if not pred_answers:
             return ""
         return pred_answers[0]
+
+
+def extract_answer_number(args, sentence: str) -> float:
+    dataset = args.dataset.lower()
+    if dataset in ["multiarith", "addsub", "singleeq", "gsm8k", "svamp"]:
+        sentence = sentence.replace(',', '')
+        pred = [s for s in re.findall(r'-?\d+\.?\d*', sentence)]
+        if not pred:
+            return float('inf')
+        pred_answer = float(pred[-1])
+    else:
+        raise NotImplementedError(' not support dataset: {}'.format(dataset))
+    if isinstance(pred_answer, str):
+        try:
+            pred_answer = float(pred_answer)
+        except ValueError as e:
+            pred_answer = float('inf')
+    return pred_answer
+
+
+def extract_answer_letter(args, sentence: str) -> str:
+    sentence_ = sentence.strip()
+    pred_answers = re.findall(r'A|B|C|D|E', sentence_)
+    if pred_answers:
+        if not pred_answers:
+            return ''
+        return pred_answers[0]
+    else:
+        return ''
 
 
 if __name__ == "__main__":

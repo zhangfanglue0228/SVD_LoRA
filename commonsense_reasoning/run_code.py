@@ -7,7 +7,7 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
 import os
-# os.environ["CUDA_VISIBLE_DEVICES"]="5,6"
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
 import sys
 from typing import List
 
@@ -44,6 +44,7 @@ from peft import (  # noqa: E402
     prepare_model_for_int8_training,
     set_peft_model_state_dict,
 )
+from svdloraTrainer import svdloraTrainer
 from transformers import AutoModelForCausalLM, AutoTokenizer, LlamaTokenizer, AutoModel  # noqa: F402
 
 
@@ -114,13 +115,13 @@ def generate_and_tokenize_prompt(data_point):
 
 # model/data params
 base_model: str = "../../../models/meta-llama/Meta-Llama-3-8B"  # the only required argument
-data_path: str = "./ft-training_set/commonsense_170k.json"
+data_path: str = "./ft-training_set/commonsense_15k.json"
 output_dir: str = "./outputs/test"
 adapter_name: str = "svdlora"
 load_8bit : bool = False
 # training hyperparams
 batch_size: int = 16
-micro_batch_size: int = 4
+micro_batch_size: int = 2
 num_epochs: int = 3
 learning_rate: float = 1e-5
 weight_decay: float = 0.0
@@ -140,7 +141,7 @@ non_linearity: str = "tanh"
 adapter_dropout: float = 0.0
 use_parallel_adapter: bool = False
 use_adapterp: bool = False
-target_modules: List[str] = ["q_proj","k_proj","v_proj","up_proj","down_proj"]
+target_modules: List[str] = ["q_proj", "k_proj", "v_proj", "up_proj", "down_proj"]
 # Dora hyperparams
 dora_simple: bool = True
 Wdecompose_target_modules: List[str] = None
@@ -414,7 +415,7 @@ if not ddp and torch.cuda.device_count() > 1:
     model.is_parallelizable = True
     model.model_parallel = True
 
-trainer = transformers.Trainer(
+trainer = svdloraTrainer(
     model=model,
     train_dataset=train_data,
     eval_dataset=val_data,

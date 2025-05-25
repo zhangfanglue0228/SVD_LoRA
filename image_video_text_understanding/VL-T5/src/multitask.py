@@ -295,6 +295,25 @@ class Trainer(TrainerBase):
 
                 loss = results['loss']
 
+                reg_loss = 0.0
+                for module in self.model.modules():
+                    if hasattr(module, 'lora_A') and hasattr(module, 'lora_B'):
+                        U = module.lora_B
+                        V = module.lora_A
+                    
+                        # Calculate the orthogonal loss of U^T U
+                        UtU = torch.mm(U.t(), U)
+                        I_U = torch.eye(UtU.size(0), device=UtU.device)
+                        reg_U = torch.linalg.matrix_norm(UtU - I_U, ord='fro') ** 2  # Frobenius norm squared
+                        
+                        # Calculate the orthogonal loss of V^T V
+                        VtV = torch.mm(V, V.t())
+                        I_V = torch.eye(VtV.size(0), device=VtV.device)
+                        reg_V = torch.linalg.matrix_norm(VtV - I_V, ord='fro') ** 2
+
+                        reg_loss += reg_U + reg_V
+                loss += reg_loss * self.args.lambda_reg
+
                 if self.args.track_z:
                     reg_loss = 0
                     layer_num = 0
